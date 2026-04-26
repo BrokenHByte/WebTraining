@@ -6,39 +6,69 @@ public interface IEventService
 {
     // READ
     List<Event> GetEvents();     
-    Event GetEventById(int id); 
+    Event? GetEventById(int id); 
     
     // WRITE
-    void AddEvent(Event data);
-    void UpdateEvent(int id, Event data);    
-    void DeleteEventById(int id); 
+    bool AddEvent(Event data);
+    bool UpdateEvent(int id, Event data);    
+    bool DeleteEventById(int id); 
 }
 
+// Синглтоновский сервис
 public class EventService : IEventService
 {
+    private List<Event> _events = new List<Event>();
+    private Lock _lock = new ();
+    
     public List<Event> GetEvents()
     {
-        throw new NotImplementedException();
+        lock (_lock)
+        {
+            return _events.ToList();           
+        }
     }
 
-    public Event GetEventById(int id)
+    public Event? GetEventById(int id)
     {
-        throw new NotImplementedException();
+        lock (_lock)
+        {
+            return _events.FirstOrDefault(e => e.Id == id);           
+        }
     }
 
-    public void AddEvent(Event data)
+    public bool AddEvent(Event data)
     {
-        throw new NotImplementedException();
+        lock (_lock)
+        {
+            if (_events.Find(x => x.Id == data.Id) == null)
+            {
+                _events.Add(data);
+                return true;
+            }
+            return false;
+        }
     }
 
-    public void UpdateEvent(int id, Event data)
+    public bool UpdateEvent(int id, Event data)
     {
-        throw new NotImplementedException();
+        lock (_lock)
+        {
+            int index = _events.FindIndex(x => x.Id == id);
+            if (index != -1)
+            {
+                _events[index] = data;
+                return true;
+            }
+            return false;
+        }
     }
 
-    public void DeleteEventById(int id)
+    public bool DeleteEventById(int id)
     {
-        throw new NotImplementedException();
+        lock (_lock)
+        {
+            return _events.RemoveAll(x => x.Id == id) > 0;
+        }
     }
 }
 
