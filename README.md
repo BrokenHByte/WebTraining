@@ -1,2 +1,8 @@
-# WebTraining
-Repository for the Yandex training course
+# Учебный проект
+Проект для практики навыков по созданию сервисов в фреймворке ASP.NET Core
+
+# Сборка и запуск
+1. Клонировать репозиторий с необходимой веткой
+2. Запустить из папки проекта команду dotnet run
+3. Можно тестировать по адресу
+`http://localhost:5008/swagger/index.html`
