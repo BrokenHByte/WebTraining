@@ -16,7 +16,7 @@ public class EventsController(IEventService eventService) : ControllerBase
     public IActionResult GetAll()
     {
         var events = _eventService.GetEvents();
-        var eventsDto = events.Select(o => new EventDto
+        var eventsDto = events.Select(o => new EventResponseDto
         {
             Id = o.Id,
             Title = o.Title,
@@ -24,18 +24,18 @@ public class EventsController(IEventService eventService) : ControllerBase
             StartAt = o.StartAt,
             EndAt = o.EndAt
         });
- 
+
         return Ok(eventsDto);
-    }  
-    
+    }
+
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
     {
         var oneEvent = _eventService.GetEventById(id);
-        if(oneEvent == null)
+        if (oneEvent == null)
             return NotFound();
-        
-        var eventsDto = new EventDto
+
+        var eventsDto = new EventResponseDto
         {
             Id = oneEvent.Id,
             Title = oneEvent.Title,
@@ -45,18 +45,17 @@ public class EventsController(IEventService eventService) : ControllerBase
         };
         return Ok(eventsDto);
     }
-    
+
     [HttpPost]
-    public IActionResult CreateEvent([FromBody] EventDto data)
+    public IActionResult CreateEvent([FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        
+
         if (_eventService.AddEvent(new Event
             {
-                Id = data.Id,
                 Title = data.Title,
                 Description = data.Description,
                 StartAt = data.StartAt,
@@ -65,10 +64,10 @@ public class EventsController(IEventService eventService) : ControllerBase
             return Created();
 
         return Conflict("Указанный Id уже существует");
-    }   
-    
+    }
+
     [HttpPut("{id}")]
-    public IActionResult UpdateEvent(int id, [FromBody] EventDto data)
+    public IActionResult UpdateEvent(int id, [FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
         {
@@ -77,25 +76,23 @@ public class EventsController(IEventService eventService) : ControllerBase
 
         var oneEvent = new Event
         {
-            Id = data.Id,
+            Id = id,
             Title = data.Title,
             Description = data.Description,
             StartAt = data.StartAt,
             EndAt = data.EndAt
         };
-            
-        if(_eventService.UpdateEvent(id, oneEvent))
-            return Ok();  
-        if(_eventService.AddEvent(oneEvent))
-            return Created();        
-        return BadRequest();
-    }  
-  
+
+        if (_eventService.UpdateEvent(id, oneEvent))
+            return Ok();
+        return NotFound();
+    }
+
     [HttpDelete("{id}")]
     public IActionResult DeleteEvent(int id)
     {
-        if(_eventService.DeleteEventById(id))
-            return Ok();  
+        if (_eventService.DeleteEventById(id))
+            return Ok();
         return NotFound();
-    }    
+    }
 }

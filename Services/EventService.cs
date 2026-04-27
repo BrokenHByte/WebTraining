@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using WebTraining.Models;
 
 namespace WebTraining.Services;
@@ -5,7 +6,7 @@ namespace WebTraining.Services;
 public interface IEventService
 {
     // READ
-    List<Event> GetEvents();     
+    IEnumerable<Event> GetEvents();     
     Event? GetEventById(int id); 
     
     // WRITE
@@ -17,58 +18,49 @@ public interface IEventService
 // Синглтоновский сервис
 public class EventService : IEventService
 {
-    private List<Event> _events = new List<Event>();
-    private Lock _lock = new ();
-    
-    public List<Event> GetEvents()
+    private ConcurrentDictionary<int, Event> _events = new();
+    private int _counterId = 0;
+
+    public IEnumerable<Event> GetEvents()
     {
-        lock (_lock)
-        {
-            return _events.ToList();           
-        }
+        // Безопасно для параллельного удаления/вставки
+        return _events.Select(pair => pair.Value);
     }
 
     public Event? GetEventById(int id)
     {
-        lock (_lock)
-        {
-            return _events.FirstOrDefault(e => e.Id == id);           
-        }
+        _events.TryGetValue(id, out Event? data);
+        return data;
     }
 
     public bool AddEvent(Event data)
     {
-        lock (_lock)
-        {
-            if (_events.Find(x => x.Id == data.Id) == null)
-            {
-                _events.Add(data);
-                return true;
-            }
-            return false;
-        }
+        var newId = Interlocked.Increment(ref _counterId) - 1;
+        data.Id = newId;
+        return _events.TryAdd(newId, data);
     }
 
     public bool UpdateEvent(int id, Event data)
     {
-        lock (_lock)
-        {
-            int index = _events.FindIndex(x => x.Id == id);
-            if (index != -1)
-            {
-                _events[index] = data;
-                return true;
-            }
+        if (!_events.TryGetValue(id, out var existingEvent))
             return false;
-        }
+
+        // Делаем "иммутабельно"
+        var updatedEvent = new Event
+        {
+            Id = existingEvent.Id,
+            Title = data.Title,
+            Description = data.Description,
+            StartAt = data.StartAt,
+            EndAt = data.EndAt
+        };
+
+        return _events.TryUpdate(id, updatedEvent, existingEvent);
     }
 
     public bool DeleteEventById(int id)
     {
-        lock (_lock)
-        {
-            return _events.RemoveAll(x => x.Id == id) > 0;
-        }
+        return _events.TryRemove(id, out _);
     }
 }
 
