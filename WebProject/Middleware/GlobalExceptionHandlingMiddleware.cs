@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using WebTraining.Services;
+using WebProject.Services;
 
-namespace WebTraining.Middleware;
+namespace WebProject.Middleware;
 
 public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
 {

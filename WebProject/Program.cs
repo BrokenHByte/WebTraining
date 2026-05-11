@@ -1,4 +1,4 @@
-using WebTraining.Services;
+using WebProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

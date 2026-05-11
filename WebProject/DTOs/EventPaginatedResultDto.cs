@@ -1,4 +1,4 @@
-namespace WebTraining.DTOs;
+namespace WebProject.DTOs;
 
 public class EventPaginatedResultDto
 {

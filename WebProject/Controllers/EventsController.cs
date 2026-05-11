@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using WebTraining.DTOs;
-using WebTraining.Models;
-using WebTraining.Services;
+using WebProject.DTOs;
+using WebProject.Models;
+using WebProject.Services;
 
-namespace WebTraining.Controllers;
+namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]

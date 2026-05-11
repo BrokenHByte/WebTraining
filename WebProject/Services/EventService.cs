@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using WebTraining.Models;
+using WebProject.Models;
 
-namespace WebTraining.Services;
+namespace WebProject.Services;
 
 public interface IEventService
 {
