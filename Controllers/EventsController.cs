@@ -10,12 +10,17 @@ namespace WebTraining.Controllers;
 [Route("[controller]")]
 public class EventsController(IEventService eventService) : ControllerBase
 {
+    private readonly int _defaultPage = 1;
+    private readonly int _defaultSizePage = 10;   
     private IEventService _eventService = eventService;
 
     [HttpGet]
-    public IActionResult GetAll()
+    public IActionResult GetAll([FromQuery]string? title, [FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]int? page, [FromQuery]int? pageSize)
     {
-        var events = _eventService.GetEvents();
+        var events = _eventService.GetEvents(title, from, to).ToList();
+        var pageEx = page ?? _defaultPage; 
+        var pageSizeEx = pageSize ?? _defaultSizePage;
+        var pageEvents = _eventService.GetPage(events, pageSizeEx, pageEx);
         var eventsDto = events.Select(o => new EventResponseDto
         {
             Id = o.Id,
@@ -23,9 +28,16 @@ public class EventsController(IEventService eventService) : ControllerBase
             Description = o.Description,
             StartAt = o.StartAt,
             EndAt = o.EndAt
-        });
+        }).ToList();
 
-        return Ok(eventsDto);
+        var eventsPaginated = new EventPaginatedResultDto()
+        {
+            TotalCountEvents = events.Count,
+            CurrentPage = pageEx,
+            PageSize = eventsDto.Count,
+            Events = eventsDto
+        };
+        return Ok(eventsPaginated);
     }
 
     [HttpGet("{id}")]
