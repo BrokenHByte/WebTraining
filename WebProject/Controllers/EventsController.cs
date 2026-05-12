@@ -8,20 +8,23 @@ namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EventsController(IEventService eventService) : ControllerBase
+public class EventsController(ILogger<EventsController> logger, IEventService eventService) : ControllerBase
 {
     private readonly int _defaultPage = 1;
-    private readonly int _defaultSizePage = 10;   
+    private readonly int _defaultSizePage = 10;
     private IEventService _eventService = eventService;
 
     [HttpGet]
-    public IActionResult GetAll([FromQuery]string? title, [FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]int? page, [FromQuery]int? pageSize)
+    public IActionResult GetAll([FromQuery] string? title, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+        [FromQuery] int? page, [FromQuery] int? pageSize)
     {
+        var pageNumber = page ?? _defaultPage;
+        var validPageSize = pageSize ?? _defaultSizePage;
+
         var events = _eventService.GetEvents(title, from, to).ToList();
-        var pageEx = page ?? _defaultPage; 
-        var pageSizeEx = pageSize ?? _defaultSizePage;
-        var pageEvents = _eventService.GetPage(events, pageSizeEx, pageEx);
-        var eventsDto = events.Select(o => new EventResponseDto
+
+        var pageEvents = _eventService.GetPage(events, pageNumber, validPageSize);
+        var eventsDto = pageEvents.Select(o => new EventResponseDto
         {
             Id = o.Id,
             Title = o.Title,
@@ -33,7 +36,7 @@ public class EventsController(IEventService eventService) : ControllerBase
         var eventsPaginated = new EventPaginatedResultDto()
         {
             TotalCountEvents = events.Count,
-            CurrentPage = pageEx,
+            CurrentPage = pageNumber,
             PageSize = eventsDto.Count,
             Events = eventsDto
         };

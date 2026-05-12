@@ -41,9 +41,8 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
         static int MapStatusCode(Exception ex)
             => ex switch
             {
-                ValidationException ve => StatusCodes.Status400BadRequest,
+                ArgumentOutOfRangeException ve => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
-                // TODO
             };
     }
 }
