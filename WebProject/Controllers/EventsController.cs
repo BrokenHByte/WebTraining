@@ -8,7 +8,7 @@ namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EventsController(ILogger<EventsController> logger, IEventService eventService) : ControllerBase
+public class EventsController(IEventService eventService) : ControllerBase
 {
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
@@ -47,9 +47,7 @@ public class EventsController(ILogger<EventsController> logger, IEventService ev
     public IActionResult GetById(int id)
     {
         var oneEvent = _eventService.GetEventById(id);
-        if (oneEvent == null)
-            return NotFound();
-
+        
         var eventsDto = new EventResponseDto
         {
             Id = oneEvent.Id,
@@ -65,29 +63,23 @@ public class EventsController(ILogger<EventsController> logger, IEventService ev
     public IActionResult CreateEvent([FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
 
-        if (_eventService.AddEvent(new Event
-            {
-                Title = data.Title,
-                Description = data.Description,
-                StartAt = data.StartAt,
-                EndAt = data.EndAt
-            }))
-            return Created();
-
-        return Conflict("Указанный Id уже существует");
+        _eventService.AddEvent(new Event
+        {
+            Title = data.Title,
+            Description = data.Description,
+            StartAt = data.StartAt,
+            EndAt = data.EndAt
+        });
+        return Created();
     }
 
     [HttpPut("{id}")]
     public IActionResult UpdateEvent(int id, [FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
 
         var oneEvent = new Event
         {
@@ -98,16 +90,14 @@ public class EventsController(ILogger<EventsController> logger, IEventService ev
             EndAt = data.EndAt
         };
 
-        if (_eventService.UpdateEvent(id, oneEvent))
-            return Ok();
-        return NotFound();
+        _eventService.UpdateEvent(id, oneEvent);
+        return Ok();
     }
 
     [HttpDelete("{id}")]
     public IActionResult DeleteEvent(int id)
     {
-        if (_eventService.DeleteEventById(id))
-            return Ok();
-        return NotFound();
+        _eventService.DeleteEventById(id);
+        return Ok();
     }
 }

@@ -1,4 +1,7 @@
-﻿using WebProject.Models;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
+using WebProject.Exceptions;
+using WebProject.Models;
 using WebProject.Services;
 
 namespace Tests;
@@ -8,22 +11,19 @@ public class TestEventService
     private readonly DateTime _date = new(1989, 10, 07);
     private readonly TimeSpan _offsetShort = TimeSpan.FromHours(1);
     private readonly TimeSpan _offsetLong = TimeSpan.FromHours(2);
-
+    private readonly string messageInvalid = "Event with id is invalid: EndAt <= StartAt";
+    
     // Данные для проверки вставки
-    IEnumerable<(Event, bool)> AddTestData()
+    IEnumerable<(Event, string)> AddTestData()
     {
         return
         [
-            (new Event { Title = "Title1", Description = "Test1", StartAt = _date + _offsetShort, EndAt = _date },
-                false),
-            (new Event { Title = "Title2", Description = "Test2", StartAt = _date, EndAt = _date + _offsetShort },
-                true),
-            (new Event { Title = "Title3", Description = null, StartAt = _date, EndAt = _date }, false),
-            (new Event { Title = "Title4", Description = "Test4", StartAt = _date, EndAt = _date + _offsetShort },
-                true),
-            (new Event { Title = "", Description = "Test5", StartAt = _date, EndAt = _date + _offsetLong }, true),
-            (new Event { Title = "Title6", Description = "Test6", StartAt = _date + _offsetShort, EndAt = _date + _offsetLong },
-                true),
+            (new Event { Title = "Title1", Description = "Test1", StartAt = _date + _offsetShort, EndAt = _date }, messageInvalid),
+            (new Event { Title = "Title2", Description = "Test2", StartAt = _date, EndAt = _date + _offsetShort }, ""),
+            (new Event { Title = "Title3", Description = null, StartAt = _date, EndAt = _date }, messageInvalid),
+            (new Event { Title = "Title4", Description = "Test4", StartAt = _date, EndAt = _date + _offsetShort }, ""),
+            (new Event { Title = "", Description = "Test5", StartAt = _date, EndAt = _date + _offsetLong }, ""),
+            (new Event { Title = "Title6", Description = "Test6", StartAt = _date + _offsetShort, EndAt = _date + _offsetLong }, ""),
         ];
     }
 
@@ -43,28 +43,25 @@ public class TestEventService
     }
 
     // Обновление для ExpectedTestData набора
-    IEnumerable<(Event, bool)> UpdateTestData()
+    IEnumerable<(Event, string)> UpdateTestData()
     {
         return
         [
-            (new Event { Id = 0, Title = "NewTitle2", Description = "Test2", StartAt = _date, EndAt = _date + _offsetShort },
-                true),
-            (new Event { Id = 1, Title = "NewTitle4", Description = "Test4", StartAt = _date + _offsetShort, EndAt = _date },
-                false),
-            (new Event { Id = 2, Title = "", Description = null, StartAt = _date, EndAt = _date + _offsetLong }, true),
-            (new Event { Id = 100, Title = "NewTitle6", Description = "Test6", StartAt = _date + _offsetShort, EndAt = _date + _offsetLong },
-                false),
+            (new Event { Id = 0, Title = "NewTitle2", Description = "Test2", StartAt = _date, EndAt = _date + _offsetShort }, ""),
+            (new Event { Id = 1, Title = "NewTitle4", Description = "Test4", StartAt = _date + _offsetShort, EndAt = _date }, messageInvalid),
+            (new Event { Id = 2, Title = "", Description = null, StartAt = _date, EndAt = _date + _offsetLong }, ""),
+            (new Event { Id = 100, Title = "NewTitle6", Description = "Test6", StartAt = _date + _offsetShort, EndAt = _date + _offsetLong }, "Event 100 not found"),
         ];
     }
 
-    static IEnumerable<(int, bool)> TestDeleteData()
+    static IEnumerable<(int, string)> TestDeleteData()
     {
         return
         [
-            (1, true),
-            (2, true),
-            (2, false),
-            (3, true)
+            (1, ""),
+            (2, ""),
+            (2, "Event 2 not found"),
+            (3, "")
         ];
     }
 
@@ -100,13 +97,18 @@ public class TestEventService
     [Fact]
     public void TestAddEvent()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in AddTestData())
         {
-            var result = eventService.AddEvent(ev.Item1);
-            if (result != ev.Item2)
+            if (ev.Item2.Length > 0)
             {
-                Assert.Fail("Error in the data test: Title = " + ev.Item1.Title);
+                var err = Assert.Throws<EventValidationException>(() => eventService.AddEvent(ev.Item1));
+                Assert.Equal(err.Message, ev.Item2);
+            }
+            else
+            {
+                eventService.AddEvent(ev.Item1);
             }
         }
     }
@@ -114,46 +116,54 @@ public class TestEventService
     [Fact]
     public void TestDeleteEvent()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in ExpectedTestData())
         {
             eventService.AddEvent(ev);
         }
 
         // Ожидаем существование четырёх записей [0-3]
-        var result = eventService.DeleteEventById(0);
-        Assert.True(result);
-        result = eventService.DeleteEventById(0);
-        Assert.False(result);
-        result = eventService.DeleteEventById(1);
-        Assert.True(result);
-        result = eventService.DeleteEventById(2);
-        Assert.True(result);
+        eventService.DeleteEventById(0);
+        var err = Assert.Throws<EventNotFoundException>(() => eventService.DeleteEventById(0));
+        Assert.Equal("Event 0 not found", err.Message);
+        eventService.DeleteEventById(1);
+        eventService.DeleteEventById(2);
+        var all = eventService.GetEvents().ToList();
+        Assert.Equal(all.Count, ExpectedTestData().Count() - 3);
     }
 
     [Fact]
     public void TestGetEventByIndex()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in ExpectedTestData())
         {
             eventService.AddEvent(ev);
         }
 
-        var eventById = eventService.GetEventById(-1);
-        Assert.Null(eventById);
-        eventById = eventService.GetEventById(0);
+        var err = Assert.Throws<EventNotFoundException>(() => eventService.GetEventById(-1));
+        Assert.Equal("Event -1 not found", err.Message);
+        err = Assert.Throws<EventNotFoundException>(() => eventService.GetEventById(100));
+        Assert.Equal("Event 100 not found", err.Message);
+        
+        var eventById = eventService.GetEventById(0);
         Assert.NotNull(eventById);
         var firstEvent = ExpectedTestData().First();
         Assert.Equal(firstEvent.Title, eventById.Title);
-        eventById = eventService.GetEventById(100);
-        Assert.Null(eventById);
+        
+        eventById = eventService.GetEventById(ExpectedTestData().Count() - 1);
+        Assert.NotNull(eventById);
+        var lastEvent = ExpectedTestData().Last();
+        Assert.Equal(lastEvent.Title, eventById.Title);
     }
 
     [Fact]
     public void TestGetAllEvent()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in ExpectedTestData())
         {
             eventService.AddEvent(ev);
@@ -161,13 +171,14 @@ public class TestEventService
 
         // Ожидаем существование четырёх записей [0-3]
         var events = eventService.GetEvents().ToList();
-        Assert.Equal(AddTestData().Count(x => x.Item2), events.Count);
+        Assert.Equal(ExpectedTestData().Count(), events.Count);
     }
 
     [Fact]
     public void TestGetAllWithFilterEvent()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in ExpectedTestData())
         {
             eventService.AddEvent(ev);
@@ -175,7 +186,7 @@ public class TestEventService
 
         // -------- Заголовки -------
         // Все по началу строки заголовка
-        var targetCount = AddTestData().Count(x => x.Item2);
+        var targetCount = ExpectedTestData().Count();
         var events = eventService.GetEvents("").ToList();
         Assert.Equal(targetCount, events.Count);
         events = eventService.GetEvents("Tit").ToList();
@@ -225,26 +236,27 @@ public class TestEventService
     [Fact]
     public void TestUpdateEvent()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in ExpectedTestData())
         {
             eventService.AddEvent(ev);
         }
 
-        foreach (var ev in UpdateTestData())
-        {
-            var result = eventService.UpdateEvent(ev.Item1.Id, ev.Item1);
-            if (result != ev.Item2)
-            {
-                Assert.Fail("Error in the data test: Title = " + ev.Item1.Title);
-            }
-        }
+        var evs = UpdateTestData().ToList();
+        eventService.UpdateEvent(evs[0].Item1.Id, evs[0].Item1);
+        var err = Assert.Throws<EventValidationException>(() => eventService.UpdateEvent(evs[1].Item1.Id, evs[1].Item1));
+        Assert.Equal(err.Message, messageInvalid);
+        eventService.UpdateEvent(evs[2].Item1.Id, evs[2].Item1);    
+        var err2 = Assert.Throws<EventNotFoundException>(() => eventService.UpdateEvent(evs[3].Item1.Id, evs[3].Item1));
+        Assert.Equal("Event 100 not found", err2.Message);
     }
 
     [Fact]
     public void TestPageEvent()
     {
-        IEventService eventService = new EventService();
+        var mockLogger = new Mock<ILogger<EventService>>();
+        IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in ExpectedPageTestData())
         {
             eventService.AddEvent(ev);

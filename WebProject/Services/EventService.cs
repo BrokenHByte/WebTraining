@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using WebProject.Exceptions;
 using WebProject.Models;
 
 namespace WebProject.Services;
@@ -8,64 +9,79 @@ public interface IEventService
     // READ
     IEnumerable<Event> GetEvents(string? title = null, DateTime? from = null, DateTime? to = null);
     IEnumerable<Event> GetPage(IEnumerable<Event> courses, int page, int pageSize);
-    Event? GetEventById(int id); 
+    Event GetEventById(int id); 
     
     // WRITE
-    bool AddEvent(Event data);
-    bool UpdateEvent(int id, Event data);    
-    bool DeleteEventById(int id); 
+    void AddEvent(Event data);
+    void UpdateEvent(int id, Event data);    
+    void DeleteEventById(int id); 
 }
 
 // Синглтоновский сервис
-public class EventService : IEventService
+public class EventService(ILogger<EventService> logger) : IEventService
 {
     private ConcurrentDictionary<int, Event> _events = new();
     private int _counterId = 0;
-
+    
+    // При конкурентном доступе возможно большинство ошибок ниже, это штатная ситуация
+    // но всё равно довольно редкая
+    
     public IEnumerable<Event> GetEvents(string? title = null, DateTime? from = null, DateTime? to = null)
     {
-        var query = _events.AsQueryable();
-        // Разделение ради минимизации проверок с StartsWith.
-        if (from != null) query = query.Where(x => x.Value.StartAt >= from);
-        if (to != null) query = query.Where(x => x.Value.EndAt <= to);
-        if (title != null) query = query.Where(x => x.Value.Title.StartsWith(title, StringComparison.OrdinalIgnoreCase));
-        return query.Select(pair => pair.Value);
+        return _events.Where(x =>
+                (from == null || x.Value.StartAt >= from) &&
+                (to == null || x.Value.EndAt <= to) &&
+                (title == null || x.Value.Title.StartsWith(title, StringComparison.OrdinalIgnoreCase)))
+            .Select(x => x.Value);
     }
     
     public IEnumerable<Event> GetPage(IEnumerable<Event> courses, int page, int pageSize)
     {
         if (page <= 0)
+        {
+            logger.LogError($"Page {page} is invalid");
             throw new ArgumentOutOfRangeException(nameof(page));
+        }
         if (pageSize <= 0)
+        {
+            logger.LogError($"Page size {pageSize} is invalid");
             throw new ArgumentOutOfRangeException(nameof(pageSize));
+        }
         return courses
             .Skip((page - 1) * pageSize)
             .Take(pageSize);
     } 
     
-    public Event? GetEventById(int id)
+
+    public Event GetEventById(int id)
     {
-        _events.TryGetValue(id, out Event? data);
-        return data;
+        if (!_events.TryGetValue(id, out var eventById))
+        {
+            logger.LogError($"Event with id {id} not found");
+            throw new EventNotFoundException($"Event {id} not found");
+        }
+        return eventById;
     }
 
-    public bool AddEvent(Event data)
+    public void AddEvent(Event data)
     {
-        if (!ValidateNewEvent(data))
-            return false;
+        ValidateNewEvent(data);
         var newId = Interlocked.Increment(ref _counterId) - 1;
         data.Id = newId;
-        return _events.TryAdd(newId, data);
+        _events.TryAdd(newId, data);
     }
 
-    public bool UpdateEvent(int id, Event data)
+    public void UpdateEvent(int id, Event data)
     {
-        if (!ValidateNewEvent(data))
-            return false;
+        // Тут так же отказ, это возможно это штатная ситуация
+        // но довольно редкая
+        ValidateNewEvent(data);
         if (!_events.TryGetValue(id, out var existingEvent))
-            return false;
-
-        // Делаем "иммутабельно"
+        {
+            logger.LogError( $"Event with id {data.Id} not found");
+            throw new EventNotFoundException($"Event {id} not found");
+        }
+        
         var updatedEvent = new Event
         {
             Id = existingEvent.Id,
@@ -75,19 +91,29 @@ public class EventService : IEventService
             EndAt = data.EndAt
         };
 
-        return _events.TryUpdate(id, updatedEvent, existingEvent);
+        if (!_events.TryUpdate(id, updatedEvent, existingEvent))
+        {
+            logger.LogError( $"Event with id {data.Id} not found");
+            throw new EventNotFoundException($"Event {id} not found");
+        }
     }
 
-    public bool DeleteEventById(int id)
+    public void DeleteEventById(int id)
     {
-        return _events.TryRemove(id, out _);
+        if (!_events.TryRemove(id, out _))
+        {
+            logger.LogError($"Event with id {id} not found");
+            throw new EventNotFoundException($"Event {id} not found");
+        }
     }
     
-    bool ValidateNewEvent(Event data)
+    void ValidateNewEvent(Event data)
     {
         if (data.EndAt <= data.StartAt)
-            return false;
-        return true;
+        {
+            logger.LogError($"Event with id {data.Id} is invalid: EndAt <= StartAt");
+            throw new EventValidationException($"Event with id is invalid: EndAt <= StartAt");
+        }
     }
     
 }
