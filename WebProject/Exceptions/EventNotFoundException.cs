@@ -1,6 +1,3 @@
 namespace WebProject.Exceptions;
 
-public class EventNotFoundException
-{
-    
-}
+public class EventNotFoundException(string message) : Exception(message);

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using WebProject.Exceptions;
 using WebProject.Services;
 
 namespace WebProject.Middleware;
@@ -41,6 +42,8 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
         static int MapStatusCode(Exception ex)
             => ex switch
             {
+                EventNotFoundException => StatusCodes.Status404NotFound,
+                EventValidationException => StatusCodes.Status400BadRequest,
                 ArgumentOutOfRangeException ve => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
