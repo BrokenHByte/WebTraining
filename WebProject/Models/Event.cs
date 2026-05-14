@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebTraining.Models;
+namespace WebProject.Models;
 
 public class Event
 {

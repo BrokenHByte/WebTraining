@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebTraining.DTOs;
+namespace WebProject.DTOs;
 
 // Копия Event, в валидации ответа смысла пока мало
 public class EventResponseDto

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebTraining.DTOs;
+namespace WebProject.DTOs;
 
 public class EventCreateDto : IValidatableObject
 {
