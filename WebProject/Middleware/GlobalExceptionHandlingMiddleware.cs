@@ -34,6 +34,7 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
             var error = new ProblemDetails
             {
                 Status = statusCode,
+                Title = ex.GetType().Name,
                 Detail = ex.Message
             };
             await context.Response.WriteAsJsonAsync(error);
@@ -44,7 +45,7 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
             {
                 EventNotFoundException => StatusCodes.Status404NotFound,
                 EventValidationException => StatusCodes.Status400BadRequest,
-                ArgumentOutOfRangeException ve => StatusCodes.Status400BadRequest,
+                ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

@@ -31,11 +31,11 @@ public class EventService(ILogger<EventService> logger) : IEventService
         return _events.Where(x =>
                 (from == null || x.Value.StartAt >= from) &&
                 (to == null || x.Value.EndAt <= to) &&
-                (title == null || x.Value.Title.StartsWith(title, StringComparison.OrdinalIgnoreCase)))
+                (title == null || x.Value.Title.Contains(title, StringComparison.OrdinalIgnoreCase)))
             .Select(x => x.Value);
     }
     
-    public IEnumerable<Event> GetPage(IEnumerable<Event> courses, int page, int pageSize)
+    public IEnumerable<Event> GetPage(IEnumerable<Event> events, int page, int pageSize)
     {
         if (page <= 0)
         {
@@ -47,7 +47,7 @@ public class EventService(ILogger<EventService> logger) : IEventService
             logger.LogError($"Page size {pageSize} is invalid");
             throw new ArgumentOutOfRangeException(nameof(pageSize));
         }
-        return courses
+        return events
             .Skip((page - 1) * pageSize)
             .Take(pageSize);
     } 
