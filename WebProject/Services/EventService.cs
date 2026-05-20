@@ -9,18 +9,18 @@ public interface IEventService
     // READ
     IEnumerable<Event> GetEvents(string? title = null, DateTime? from = null, DateTime? to = null);
     IEnumerable<Event> GetPage(IEnumerable<Event> courses, int page, int pageSize);
-    Event GetEventById(int id); 
+    Event GetEventById(Guid id); 
     
     // WRITE
     void AddEvent(Event data);
-    void UpdateEvent(int id, Event data);    
-    void DeleteEventById(int id); 
+    void UpdateEvent(Guid id, Event data);    
+    void DeleteEventById(Guid id); 
 }
 
 // Синглтоновский сервис
 public class EventService(ILogger<EventService> logger) : IEventService
 {
-    private ConcurrentDictionary<int, Event> _events = new();
+    private ConcurrentDictionary<Guid, Event> _events = new();
     private int _counterId = 0;
     
     // При конкурентном доступе возможно большинство ошибок ниже, это штатная ситуация
@@ -53,7 +53,7 @@ public class EventService(ILogger<EventService> logger) : IEventService
     } 
     
 
-    public Event GetEventById(int id)
+    public Event GetEventById(Guid id)
     {
         if (!_events.TryGetValue(id, out var eventById))
         {
@@ -66,12 +66,12 @@ public class EventService(ILogger<EventService> logger) : IEventService
     public void AddEvent(Event data)
     {
         ValidateNewEvent(data);
-        var newId = Interlocked.Increment(ref _counterId) - 1;
+        var newId = Guid.NewGuid();;
         data.Id = newId;
         _events.TryAdd(newId, data);
     }
 
-    public void UpdateEvent(int id, Event data)
+    public void UpdateEvent(Guid id, Event data)
     {
         // Тут так же отказ, это возможно это штатная ситуация
         // но довольно редкая
@@ -98,7 +98,7 @@ public class EventService(ILogger<EventService> logger) : IEventService
         }
     }
 
-    public void DeleteEventById(int id)
+    public void DeleteEventById(Guid id)
     {
         if (!_events.TryRemove(id, out _))
         {

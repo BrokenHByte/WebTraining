@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using WebProject.DTOs;
+using WebProject.DTOs.Response;
 using WebProject.Models;
 using WebProject.Services;
 
@@ -8,11 +8,11 @@ namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EventsController(IEventService eventService) : ControllerBase
+public class EventsController(IEventService eventService, IBookingService bookingService) : ControllerBase
 {
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
-    private IEventService _eventService = eventService;
+    private readonly IEventService _eventService = eventService;
 
     [HttpGet]
     public IActionResult GetAll([FromQuery] string? title, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
@@ -33,7 +33,7 @@ public class EventsController(IEventService eventService) : ControllerBase
             EndAt = o.EndAt
         }).ToList();
 
-        var eventsPaginated = new EventPaginatedResultDto()
+        var eventsPaginated = new EventPaginatedResultDto
         {
             TotalCountEvents = events.Count,
             CurrentPage = pageNumber,
@@ -44,10 +44,10 @@ public class EventsController(IEventService eventService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(int id)
+    public IActionResult GetById(Guid id)
     {
         var oneEvent = _eventService.GetEventById(id);
-        
+
         var eventsDto = new EventResponseDto
         {
             Id = oneEvent.Id,
@@ -75,8 +75,21 @@ public class EventsController(IEventService eventService) : ControllerBase
         return Created();
     }
 
+    [HttpPost("{id}/book")]
+    public async Task<IActionResult> CreateBookingAsync([FromBody] Guid eventId)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var booking = await bookingService.CreateBookingAsync(eventId);
+        var response = new BookingCreateResponseDto { Id = booking.Id, EventId = eventId, Status = booking.Status };
+        Response.Headers.Location = $"/bookings/{booking.Id}";
+        return Accepted(response);
+    }
+
+
     [HttpPut("{id}")]
-    public IActionResult UpdateEvent(int id, [FromBody] EventCreateDto data)
+    public IActionResult UpdateEvent(Guid id, [FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -95,7 +108,7 @@ public class EventsController(IEventService eventService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public IActionResult DeleteEvent(int id)
+    public IActionResult DeleteEvent(Guid id)
     {
         _eventService.DeleteEventById(id);
         return Ok();

@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IEventService, EventService>();
+builder.Services.AddSingleton<IBookingService, BookingService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
