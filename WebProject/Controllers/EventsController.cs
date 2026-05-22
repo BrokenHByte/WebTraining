@@ -12,7 +12,6 @@ public class EventsController(IEventService eventService, IBookingService bookin
 {
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
-    private readonly IEventService _eventService = eventService;
 
     [HttpGet]
     public IActionResult GetAll([FromQuery] string? title, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
@@ -21,9 +20,9 @@ public class EventsController(IEventService eventService, IBookingService bookin
         var pageNumber = page ?? _defaultPage;
         var validPageSize = pageSize ?? _defaultSizePage;
 
-        var events = _eventService.GetEvents(title, from, to).ToList();
+        var events = eventService.GetEvents(title, from, to).ToList();
 
-        var pageEvents = _eventService.GetPage(events, pageNumber, validPageSize);
+        var pageEvents = eventService.GetPage(events, pageNumber, validPageSize);
         var eventsDto = pageEvents.Select(o => new EventResponseDto
         {
             Id = o.Id,
@@ -43,10 +42,10 @@ public class EventsController(IEventService eventService, IBookingService bookin
         return Ok(eventsPaginated);
     }
 
-    [HttpGet("{id}")]
-    public IActionResult GetById(Guid id)
+    [HttpGet("{eventId}")]
+    public IActionResult GetById(Guid eventId)
     {
-        var oneEvent = _eventService.GetEventById(id);
+        var oneEvent = eventService.GetEventById(eventId);
 
         var eventsDto = new EventResponseDto
         {
@@ -65,7 +64,7 @@ public class EventsController(IEventService eventService, IBookingService bookin
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        _eventService.AddEvent(new Event
+        eventService.AddEvent(new Event
         {
             Title = data.Title,
             Description = data.Description,
@@ -87,7 +86,6 @@ public class EventsController(IEventService eventService, IBookingService bookin
         return Accepted(response);
     }
 
-
     [HttpPut("{id}")]
     public IActionResult UpdateEvent(Guid id, [FromBody] EventCreateDto data)
     {
@@ -103,14 +101,14 @@ public class EventsController(IEventService eventService, IBookingService bookin
             EndAt = data.EndAt
         };
 
-        _eventService.UpdateEvent(id, oneEvent);
+        eventService.UpdateEvent(id, oneEvent);
         return Ok();
     }
 
     [HttpDelete("{id}")]
     public IActionResult DeleteEvent(Guid id)
     {
-        _eventService.DeleteEventById(id);
+        eventService.DeleteEventById(id);
         return Ok();
     }
 }
