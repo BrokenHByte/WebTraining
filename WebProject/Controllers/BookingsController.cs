@@ -8,9 +8,9 @@ namespace WebProject.Controllers;
 public class BookingsController(IBookingService bookingService) : ControllerBase
 {
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetByBookingId(Guid bookingId)
+    public async Task<IActionResult> GetByBookingId(Guid id)
     {
-        var booking = await bookingService.GetBookingByIdAsync(bookingId);
+        var booking = await bookingService.GetBookingByIdAsync(id);
         if (booking == null) return NotFound();
         return Ok(booking.Status);
     }

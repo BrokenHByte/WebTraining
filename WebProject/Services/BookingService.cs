@@ -7,7 +7,7 @@ namespace WebProject.Services;
 public interface IBookingService
 {
     Task<Booking> CreateBookingAsync(Guid eventId);
-    Task<Booking?> GetBookingByIdAsync(Guid bookingId);
+    Task<Booking> GetBookingByIdAsync(Guid bookingId);
     IEnumerable<Booking> GetBookings();
     void UpdateBooking(Guid bookingId, Booking data);
     void DeleteBookingById(Guid bookingId);
@@ -21,7 +21,7 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
     public Task<Booking> CreateBookingAsync(Guid eventId)
     {
         if (!eventService.ContainsById(eventId))
-            throw new EventNotFoundException($"Event with id {eventId} does not exist");
+            throw new EventNotFoundException("Event not found");
 
         var guid = Guid.NewGuid();
         _bookings.TryAdd(guid, new Booking
@@ -35,9 +35,15 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
         return Task.FromResult(_bookings[guid]);
     }
 
-    public Task<Booking?> GetBookingByIdAsync(Guid bookingId)
+    public Task<Booking> GetBookingByIdAsync(Guid bookingId)
     {
-        return Task.FromResult(_bookings.GetValueOrDefault(bookingId));
+        if (!_bookings.TryGetValue(bookingId, out var bookingById))
+        {
+            logger.LogError("Booking not found");
+            throw new BookingNotFoundException("Booking not found");
+        }
+
+        return Task.FromResult(bookingById);
     }
 
     public IEnumerable<Booking> GetBookings()

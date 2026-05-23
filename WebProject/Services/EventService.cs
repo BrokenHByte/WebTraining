@@ -13,7 +13,7 @@ public interface IEventService
     bool ContainsById(Guid id);
 
     // WRITE
-    void AddEvent(Event data);
+    Guid AddEvent(string title, string? description, DateTime startAt, DateTime endAt);
     void UpdateEvent(Guid id, Event data);
     void DeleteEventById(Guid id);
 }
@@ -60,30 +60,21 @@ public class EventService(ILogger<EventService> logger) : IEventService
         if (!_events.TryGetValue(id, out var eventById))
         {
             logger.LogError($"Event with id {id} not found");
-            throw new EventNotFoundException($"Event {id} not found");
+            throw new EventNotFoundException("Event not found");
         }
 
         return eventById;
-    }
-
-    public void AddEvent(Event data)
-    {
-        ValidateNewEvent(data);
-        var newId = Guid.NewGuid();
-        ;
-        data.Id = newId;
-        _events.TryAdd(newId, data);
     }
 
     public void UpdateEvent(Guid id, Event data)
     {
         // Тут так же отказ, это возможно это штатная ситуация
         // но довольно редкая
-        ValidateNewEvent(data);
+        ValidateNewEvent(data.StartAt, data.EndAt);
         if (!_events.TryGetValue(id, out var existingEvent))
         {
             logger.LogError($"Event with id {id} not found");
-            throw new EventNotFoundException($"Event {id} not found");
+            throw new EventNotFoundException("Event not found");
         }
 
         var updatedEvent = new Event
@@ -98,7 +89,7 @@ public class EventService(ILogger<EventService> logger) : IEventService
         if (!_events.TryUpdate(id, updatedEvent, existingEvent))
         {
             logger.LogError($"Event with id {data.Id} not found");
-            throw new EventNotFoundException($"Event {id} not found");
+            throw new EventNotFoundException("Event not found");
         }
     }
 
@@ -107,7 +98,7 @@ public class EventService(ILogger<EventService> logger) : IEventService
         if (!_events.TryRemove(id, out _))
         {
             logger.LogError($"Event with id {id} not found");
-            throw new EventNotFoundException($"Event {id} not found");
+            throw new EventNotFoundException("Event not found");
         }
     }
 
@@ -116,11 +107,27 @@ public class EventService(ILogger<EventService> logger) : IEventService
         return _events.ContainsKey(id);
     }
 
-    private void ValidateNewEvent(Event data)
+    public Guid AddEvent(string title, string? description, DateTime startAt, DateTime endAt)
     {
-        if (data.EndAt <= data.StartAt)
+        ValidateNewEvent(startAt, endAt);
+        var newId = Guid.NewGuid();
+        var newEvent = new Event
         {
-            logger.LogError($"Event {data.Id} is invalid: EndAt <= StartAt");
+            Id = newId,
+            Title = title,
+            Description = description,
+            StartAt = startAt,
+            EndAt = endAt
+        };
+        _events.TryAdd(newId, newEvent);
+        return newId;
+    }
+
+    private void ValidateNewEvent(DateTime StartAt, DateTime EndAt)
+    {
+        if (EndAt <= StartAt)
+        {
+            logger.LogError("Event is invalid: EndAt <= StartAt");
             throw new EventValidationException("Event with id is invalid: EndAt <= StartAt");
         }
     }

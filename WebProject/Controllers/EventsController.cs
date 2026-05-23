@@ -8,7 +8,10 @@ namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EventsController(IEventService eventService, IBookingService bookingService) : ControllerBase
+public class EventsController(
+    IEventService eventService,
+    IEventCoordinationService eventCoordinationService,
+    IBookingService bookingService) : ControllerBase
 {
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
@@ -42,10 +45,10 @@ public class EventsController(IEventService eventService, IBookingService bookin
         return Ok(eventsPaginated);
     }
 
-    [HttpGet("{eventId}")]
-    public IActionResult GetById(Guid eventId)
+    [HttpGet("{id}")]
+    public IActionResult GetById(Guid id)
     {
-        var oneEvent = eventService.GetEventById(eventId);
+        var oneEvent = eventService.GetEventById(id);
 
         var eventsDto = new EventResponseDto
         {
@@ -64,24 +67,23 @@ public class EventsController(IEventService eventService, IBookingService bookin
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        eventService.AddEvent(new Event
-        {
-            Title = data.Title,
-            Description = data.Description,
-            StartAt = data.StartAt,
-            EndAt = data.EndAt
-        });
+        eventService.AddEvent(
+            data.Title,
+            data.Description,
+            data.StartAt,
+            data.EndAt
+        );
         return Created();
     }
 
     [HttpPost("{id}/book")]
-    public async Task<IActionResult> CreateBookingAsync([FromBody] Guid eventId)
+    public async Task<IActionResult> CreateBookingAsync(Guid id)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var booking = await bookingService.CreateBookingAsync(eventId);
-        var response = new BookingCreateResponseDto { Id = booking.Id, EventId = eventId, Status = booking.Status };
+        var booking = await bookingService.CreateBookingAsync(id);
+        var response = new BookingCreateResponseDto { Id = booking.Id, EventId = id, Status = booking.Status };
         Response.Headers.Location = $"/bookings/{booking.Id}";
         return Accepted(response);
     }
@@ -108,7 +110,7 @@ public class EventsController(IEventService eventService, IBookingService bookin
     [HttpDelete("{id}")]
     public IActionResult DeleteEvent(Guid id)
     {
-        eventService.DeleteEventById(id);
+        eventCoordinationService.DeleteEventWithCheck(id);
         return Ok();
     }
 }
