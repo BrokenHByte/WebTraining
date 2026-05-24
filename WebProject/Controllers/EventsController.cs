@@ -1,40 +1,53 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using WebTraining.DTOs;
-using WebTraining.Models;
-using WebTraining.Services;
+using WebProject.DTOs;
+using WebProject.Models;
+using WebProject.Services;
 
-namespace WebTraining.Controllers;
+namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 public class EventsController(IEventService eventService) : ControllerBase
 {
+    private readonly int _defaultPage = 1;
+    private readonly int _defaultSizePage = 10;
     private IEventService _eventService = eventService;
 
     [HttpGet]
-    public IActionResult GetAll()
+    public IActionResult GetAll([FromQuery] string? title, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+        [FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        var events = _eventService.GetEvents();
-        var eventsDto = events.Select(o => new EventResponseDto
+        var pageNumber = page ?? _defaultPage;
+        var validPageSize = pageSize ?? _defaultSizePage;
+
+        var events = _eventService.GetEvents(title, from, to).ToList();
+
+        var pageEvents = _eventService.GetPage(events, pageNumber, validPageSize);
+        var eventsDto = pageEvents.Select(o => new EventResponseDto
         {
             Id = o.Id,
             Title = o.Title,
             Description = o.Description,
             StartAt = o.StartAt,
             EndAt = o.EndAt
-        });
+        }).ToList();
 
-        return Ok(eventsDto);
+        var eventsPaginated = new EventPaginatedResultDto()
+        {
+            TotalCountEvents = events.Count,
+            CurrentPage = pageNumber,
+            PageSize = eventsDto.Count,
+            Events = eventsDto
+        };
+        return Ok(eventsPaginated);
     }
 
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
     {
         var oneEvent = _eventService.GetEventById(id);
-        if (oneEvent == null)
-            return NotFound();
-
+        
         var eventsDto = new EventResponseDto
         {
             Id = oneEvent.Id,
@@ -50,29 +63,23 @@ public class EventsController(IEventService eventService) : ControllerBase
     public IActionResult CreateEvent([FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
 
-        if (_eventService.AddEvent(new Event
-            {
-                Title = data.Title,
-                Description = data.Description,
-                StartAt = data.StartAt,
-                EndAt = data.EndAt
-            }))
-            return Created();
-
-        return Conflict("Указанный Id уже существует");
+        _eventService.AddEvent(new Event
+        {
+            Title = data.Title,
+            Description = data.Description,
+            StartAt = data.StartAt,
+            EndAt = data.EndAt
+        });
+        return Created();
     }
 
     [HttpPut("{id}")]
     public IActionResult UpdateEvent(int id, [FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
 
         var oneEvent = new Event
         {
@@ -83,16 +90,14 @@ public class EventsController(IEventService eventService) : ControllerBase
             EndAt = data.EndAt
         };
 
-        if (_eventService.UpdateEvent(id, oneEvent))
-            return Ok();
-        return NotFound();
+        _eventService.UpdateEvent(id, oneEvent);
+        return Ok();
     }
 
     [HttpDelete("{id}")]
     public IActionResult DeleteEvent(int id)
     {
-        if (_eventService.DeleteEventById(id))
-            return Ok();
-        return NotFound();
+        _eventService.DeleteEventById(id);
+        return Ok();
     }
 }
