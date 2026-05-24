@@ -35,7 +35,7 @@ public class EventsController(
             EndAt = o.EndAt
         }).ToList();
 
-        var eventsPaginated = new EventPaginatedResultDto
+        var eventsPaginated = new EventPaginatedResponseDto
         {
             TotalCountEvents = events.Count,
             CurrentPage = pageNumber,

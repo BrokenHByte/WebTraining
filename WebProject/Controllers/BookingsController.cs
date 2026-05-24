@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WebProject.DTOs.Response;
 using WebProject.Services;
 
 namespace WebProject.Controllers;
@@ -12,6 +13,14 @@ public class BookingsController(IBookingService bookingService) : ControllerBase
     {
         var booking = await bookingService.GetBookingByIdAsync(id);
         if (booking == null) return NotFound();
-        return Ok(booking.Status);
+        var bookingDto = new BookingGetResponseDto
+        {
+            Id = booking.Id,
+            EventId = booking.EventId,
+            Status = booking.Status,
+            CreatedAt = booking.CreatedAt,
+            ProcessedAt = booking.ProcessedAt
+        };
+        return Ok(bookingDto);
     }
 }
