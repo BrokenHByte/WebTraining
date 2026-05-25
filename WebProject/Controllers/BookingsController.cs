@@ -12,7 +12,6 @@ public class BookingsController(IBookingService bookingService) : ControllerBase
     public async Task<IActionResult> GetByBookingId(Guid id)
     {
         var booking = await bookingService.GetBookingByIdAsync(id);
-        if (booking == null) return NotFound();
         var bookingDto = new BookingGetResponseDto
         {
             Id = booking.Id,

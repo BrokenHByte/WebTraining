@@ -19,6 +19,7 @@ public class EventCoordinationService(
         logger.LogInformation($"{booking.Length} event bookings were deleted");
         foreach (var item in booking)
             bookingService.DeleteBookingById(item.Id);
+        eventService.DeleteEventById(eventId);
         return Task.CompletedTask;
     }
 }
