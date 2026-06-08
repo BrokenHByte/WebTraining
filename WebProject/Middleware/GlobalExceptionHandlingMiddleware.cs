@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using WebProject.Exceptions;
-using WebProject.Services;
 
 namespace WebProject.Middleware;
 
@@ -21,11 +19,8 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
                 context.Request.Method,
                 context.Request.Path,
                 context.Request.Headers["x-request-id"]);
-            
-            if (context.Response.HasStarted)
-            {
-                return;
-            }
+
+            if (context.Response.HasStarted) return;
 
             var statusCode = MapStatusCode(ex);
             context.Response.StatusCode = statusCode;
@@ -41,12 +36,15 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
         }
 
         static int MapStatusCode(Exception ex)
-            => ex switch
+        {
+            return ex switch
             {
                 EventNotFoundException => StatusCodes.Status404NotFound,
                 EventValidationException => StatusCodes.Status400BadRequest,
+                BookingNotFoundException => StatusCodes.Status404NotFound,
                 ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
+        }
     }
 }

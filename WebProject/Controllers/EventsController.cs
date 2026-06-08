@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using WebProject.DTOs;
+using WebProject.DTOs.Response;
 using WebProject.Models;
 using WebProject.Services;
 
@@ -8,11 +8,13 @@ namespace WebProject.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EventsController(IEventService eventService) : ControllerBase
+public class EventsController(
+    IEventService eventService,
+    IEventCoordinationService eventCoordinationService,
+    IBookingService bookingService) : ControllerBase
 {
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
-    private IEventService _eventService = eventService;
 
     [HttpGet]
     public IActionResult GetAll([FromQuery] string? title, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
@@ -21,9 +23,9 @@ public class EventsController(IEventService eventService) : ControllerBase
         var pageNumber = page ?? _defaultPage;
         var validPageSize = pageSize ?? _defaultSizePage;
 
-        var events = _eventService.GetEvents(title, from, to).ToList();
+        var events = eventService.GetEvents(title, from, to).ToList();
 
-        var pageEvents = _eventService.GetPage(events, pageNumber, validPageSize);
+        var pageEvents = eventService.GetPage(events, pageNumber, validPageSize);
         var eventsDto = pageEvents.Select(o => new EventResponseDto
         {
             Id = o.Id,
@@ -33,7 +35,7 @@ public class EventsController(IEventService eventService) : ControllerBase
             EndAt = o.EndAt
         }).ToList();
 
-        var eventsPaginated = new EventPaginatedResultDto()
+        var eventsPaginated = new EventPaginatedResponseDto
         {
             TotalCountEvents = events.Count,
             CurrentPage = pageNumber,
@@ -44,10 +46,10 @@ public class EventsController(IEventService eventService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(int id)
+    public IActionResult GetById(Guid id)
     {
-        var oneEvent = _eventService.GetEventById(id);
-        
+        var oneEvent = eventService.GetEventById(id);
+
         var eventsDto = new EventResponseDto
         {
             Id = oneEvent.Id,
@@ -65,18 +67,29 @@ public class EventsController(IEventService eventService) : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        _eventService.AddEvent(new Event
-        {
-            Title = data.Title,
-            Description = data.Description,
-            StartAt = data.StartAt,
-            EndAt = data.EndAt
-        });
+        eventService.AddEvent(
+            data.Title,
+            data.Description,
+            data.StartAt,
+            data.EndAt
+        );
         return Created();
     }
 
+    [HttpPost("{id}/book")]
+    public async Task<IActionResult> CreateBookingAsync(Guid id)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var booking = await bookingService.CreateBookingAsync(id);
+        var response = new BookingCreateResponseDto { Id = booking.Id, EventId = id, Status = booking.Status };
+        Response.Headers.Location = $"/bookings/{booking.Id}";
+        return Accepted(response);
+    }
+
     [HttpPut("{id}")]
-    public IActionResult UpdateEvent(int id, [FromBody] EventCreateDto data)
+    public IActionResult UpdateEvent(Guid id, [FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -90,14 +103,14 @@ public class EventsController(IEventService eventService) : ControllerBase
             EndAt = data.EndAt
         };
 
-        _eventService.UpdateEvent(id, oneEvent);
+        eventService.UpdateEvent(id, oneEvent);
         return Ok();
     }
 
     [HttpDelete("{id}")]
-    public IActionResult DeleteEvent(int id)
+    public IActionResult DeleteEvent(Guid id)
     {
-        _eventService.DeleteEventById(id);
+        eventCoordinationService.DeleteEventWithCheck(id);
         return Ok();
     }
 }
