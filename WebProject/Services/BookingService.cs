@@ -90,17 +90,33 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
         }
     }
 
-    public void DeleteBookingById(Guid bookingId)
+    public IEnumerable<Booking> GetPending()
     {
+        return _bookings.Select(x => x.Value).Where(x => x.Status == Booking.BookingStatus.Pending);
+    }
+
+    public async void DeleteBookingById(Guid bookingId)
+    {
+        var guidEvent = Guid.Empty;
+        if (_bookings.TryGetValue(bookingId, out var eventToDelete))
+            guidEvent = eventToDelete.EventId;
+
         if (!_bookings.TryRemove(bookingId, out _))
         {
             logger.LogError($"Booking with id {bookingId} not found");
             throw new BookingNotFoundException($"Booking {bookingId} not found");
         }
-    }
 
-    public IEnumerable<Booking> GetPending()
-    {
-        return _bookings.Select(x => x.Value).Where(x => x.Status == Booking.BookingStatus.Pending);
+        await _bookingSemaphore.WaitAsync();
+
+        try
+        {
+            var eventOne = await eventService.GetEventByIdAsync(guidEvent);
+            eventOne.ReleaseSeats();
+        }
+        finally
+        {
+            _bookingSemaphore.Release();
+        }
     }
 }

@@ -23,12 +23,14 @@ public class Booking : ICloneable
     public Booking Confirm()
     {
         Status = BookingStatus.Confirmed;
+        ProcessedAt = DateTime.UtcNow;
         return this;
     }
 
     public Booking Reject()
     {
         Status = BookingStatus.Rejected;
+        ProcessedAt = DateTime.UtcNow;
         return this;
     }
 }

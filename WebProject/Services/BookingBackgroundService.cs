@@ -49,6 +49,7 @@ public class BookingBackgroundService(
         }
         catch (OperationCanceledException ex)
         {
+            // Остановка сервиса. Вероятно штатная ситуация
         }
         catch (Exception ex)
         {
