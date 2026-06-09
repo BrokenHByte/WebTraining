@@ -35,12 +35,12 @@ public class TestEventService
             if (ev.Item2.Length > 0)
             {
                 var err = Assert.Throws<EventValidationException>(() =>
-                    eventService.AddEvent(dataEvent.Title, dataEvent.Description, dataEvent.StartAt, dataEvent.EndAt));
+                    eventService.AddEventAsync(dataEvent.Title, dataEvent.Description, dataEvent.StartAt, dataEvent.EndAt));
                 Assert.Equal(err.Message, ev.Item2);
             }
             else
             {
-                eventService.AddEvent(dataEvent.Title, dataEvent.Description, dataEvent.StartAt, dataEvent.EndAt);
+                eventService.AddEventAsync(dataEvent.Title, dataEvent.Description, dataEvent.StartAt, dataEvent.EndAt);
             }
         }
     }
@@ -52,7 +52,7 @@ public class TestEventService
         IEventService eventService = new EventService(mockLogger.Object);
         var addData = EventData.ExpectedTestData().ToArray();
         List<Guid> eventIds = new();
-        foreach (var ev in addData) eventIds.Add(eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+        foreach (var ev in addData) eventIds.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
 
         // Ожидаем существование четырёх записей [0-3]
         eventService.DeleteEventById(eventIds[0]);
@@ -71,7 +71,7 @@ public class TestEventService
         IEventService eventService = new EventService(mockLogger.Object);
         List<Guid> eventIds = new();
         foreach (var ev in EventData.ExpectedTestData())
-            eventIds.Add(eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+            eventIds.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
 
         var err = Assert.Throws<EventNotFoundException>(() => eventService.GetEventById(Guid.Empty));
         Assert.Equal("Event not found", err.Message);
@@ -88,7 +88,7 @@ public class TestEventService
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in EventData.ExpectedTestData())
-            eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
+            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
 
         // Ожидаем существование четырёх записей [0-3]
         var events = eventService.GetEvents().ToList();
@@ -101,7 +101,7 @@ public class TestEventService
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in EventData.ExpectedTestData())
-            eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
+            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
 
         // -------- Заголовки -------
         // Все по началу строки заголовка
@@ -160,7 +160,7 @@ public class TestEventService
         IEventService eventService = new EventService(mockLogger.Object);
         List<Guid> eventIds = new();
         foreach (var ev in EventData.ExpectedTestData())
-            eventIds.Add(eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+            eventIds.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
 
         var evs = EventData.UpdateTestData().ToList();
         eventService.UpdateEvent(eventIds[0], evs[0].Item1);
@@ -178,7 +178,7 @@ public class TestEventService
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in EventData.ExpectedPageTestData())
-            eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
+            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
 
         var events = eventService.GetEvents().ToList();
         const int sizePage = 30;

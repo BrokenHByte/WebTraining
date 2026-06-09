@@ -17,22 +17,25 @@ public class EventsController(
     private readonly int _defaultSizePage = 10;
 
     [HttpGet]
-    public IActionResult GetAll([FromQuery] string? title, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+    public async Task<IActionResult> GetAllAsync([FromQuery] string? title, [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
         [FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        var pageNumber = page ?? _defaultPage;
-        var validPageSize = pageSize ?? _defaultSizePage;
+        int pageNumber = page ?? _defaultPage;
+        int validPageSize = pageSize ?? _defaultSizePage;
 
-        var events = eventService.GetEvents(title, from, to).ToList();
+        var events = (await eventService.GetEventsAsync(title, from, to)).ToList();
 
-        var pageEvents = eventService.GetPage(events, pageNumber, validPageSize);
+        var pageEvents = await eventService.GetPageAsync(events, pageNumber, validPageSize);
         var eventsDto = pageEvents.Select(o => new EventResponseDto
         {
             Id = o.Id,
             Title = o.Title,
             Description = o.Description,
             StartAt = o.StartAt,
-            EndAt = o.EndAt
+            EndAt = o.EndAt,
+            TotalSeats = o.TotalSeats,
+            AvailableSeats = o.AvailableSeats
         }).ToList();
 
         var eventsPaginated = new EventPaginatedResponseDto
@@ -42,13 +45,14 @@ public class EventsController(
             PageSize = eventsDto.Count,
             Events = eventsDto
         };
+
         return Ok(eventsPaginated);
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(Guid id)
+    public async Task<IActionResult> GetByIdAsync(Guid id)
     {
-        var oneEvent = eventService.GetEventById(id);
+        var oneEvent = await eventService.GetEventByIdAsync(id);
 
         var eventsDto = new EventResponseDto
         {
@@ -56,23 +60,28 @@ public class EventsController(
             Title = oneEvent.Title,
             Description = oneEvent.Description,
             StartAt = oneEvent.StartAt,
-            EndAt = oneEvent.EndAt
+            EndAt = oneEvent.EndAt,
+            TotalSeats = oneEvent.TotalSeats,
+            AvailableSeats = oneEvent.AvailableSeats
         };
+
         return Ok(eventsDto);
     }
 
     [HttpPost]
-    public IActionResult CreateEvent([FromBody] EventCreateDto data)
+    public async Task<IActionResult> CreateEventAsync([FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        eventService.AddEvent(
+        await eventService.AddEventAsync(
             data.Title,
             data.Description,
             data.StartAt,
-            data.EndAt
+            data.EndAt,
+            data.TotalSeats
         );
+
         return Created();
     }
 
@@ -89,7 +98,7 @@ public class EventsController(
     }
 
     [HttpPut("{id}")]
-    public IActionResult UpdateEvent(Guid id, [FromBody] EventCreateDto data)
+    public async Task<IActionResult> UpdateEventAsync(Guid id, [FromBody] EventCreateDto data)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -100,17 +109,18 @@ public class EventsController(
             Title = data.Title,
             Description = data.Description,
             StartAt = data.StartAt,
-            EndAt = data.EndAt
+            EndAt = data.EndAt,
+            TotalSeats = data.TotalSeats
         };
 
-        eventService.UpdateEvent(id, oneEvent);
+        eventService.UpdateEventAsync(id, oneEvent);
         return Ok();
     }
 
     [HttpDelete("{id}")]
-    public IActionResult DeleteEvent(Guid id)
+    public async Task<IActionResult> DeleteEventAsync(Guid id)
     {
-        eventCoordinationService.DeleteEventWithCheck(id);
+        await eventCoordinationService.DeleteEventWithCheck(id);
         return Ok();
     }
 }

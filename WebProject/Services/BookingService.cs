@@ -16,14 +16,22 @@ public interface IBookingService
 public class BookingService(IEventService eventService, ILogger<BookingService> logger) : IBookingService
 {
     private readonly ConcurrentDictionary<Guid, Booking> _bookings = new();
+    private readonly SemaphoreSlim _bookingSemaphore = new(1, 1);
 
-
-    public Task<Booking> CreateBookingAsync(Guid eventId)
+    public async Task<Booking> CreateBookingAsync(Guid eventId)
     {
-        if (!eventService.ContainsById(eventId))
+        var guid = Guid.NewGuid();
+        await _bookingSemaphore.WaitAsync();
+
+        var eventOne = await eventService.GetEventByIdAsync(eventId);
+        if (eventOne == null)
             throw new EventNotFoundException("Event not found");
 
-        var guid = Guid.NewGuid();
+        if (!eventOne.TryReserveSeats())
+            throw new NoAvailableSeatsException("No available seats for this event");
+
+        _bookingSemaphore.Release();
+
         _bookings.TryAdd(guid, new Booking
         {
             Id = guid,
@@ -32,7 +40,8 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
             CreatedAt = DateTime.UtcNow,
             ProcessedAt = null
         });
-        return Task.FromResult(_bookings[guid]);
+
+        return _bookings[guid];
     }
 
     public Task<Booking> GetBookingByIdAsync(Guid bookingId)

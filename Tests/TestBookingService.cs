@@ -17,7 +17,7 @@ public class TestBookingService
         IBookingService bookingService = new BookingService(eventService, mockLogger2.Object);
         List<Guid> guidsEvent = new();
         foreach (var ev in EventData.ExpectedTestData())
-            guidsEvent.Add(eventService.AddEvent(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+            guidsEvent.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
 
         // Создаём невалидное
         var err = await Assert.ThrowsAsync<EventNotFoundException>(async () =>
