@@ -14,8 +14,8 @@ public interface IEventService
 
     // WRITE
     Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt, int TotalSeats);
-    void UpdateEventAsync(Guid id, Event data);
-    void DeleteEventByIdAsync(Guid id);
+    Task UpdateEventAsync(Guid id, Event data);
+    Task DeleteEventByIdAsync(Guid id);
 }
 
 // Синглтоновский сервис
@@ -68,16 +68,6 @@ public class EventService(ILogger<EventService> logger) : IEventService
         return eventById;
     }
 
-    public async void DeleteEventByIdAsync(Guid id)
-    {
-        // TODO: async для БД
-        if (!_events.TryRemove(id, out _))
-        {
-            logger.LogError($"Event with id {id} not found");
-            throw new EventNotFoundException("Event not found");
-        }
-    }
-
     public async Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt,
         int TotalSeats)
     {
@@ -99,7 +89,23 @@ public class EventService(ILogger<EventService> logger) : IEventService
         return newId;
     }
 
-    public async void UpdateEventAsync(Guid id, Event data)
+    public async Task<bool> ContainsByIdAsync(Guid id)
+    {
+        // TODO: async для БД
+        return _events.ContainsKey(id);
+    }
+
+    public async Task DeleteEventByIdAsync(Guid id)
+    {
+        // TODO: async для БД
+        if (!_events.TryRemove(id, out _))
+        {
+            logger.LogError($"Event with id {id} not found");
+            throw new EventNotFoundException("Event not found");
+        }
+    }
+
+    public async Task UpdateEventAsync(Guid id, Event data)
     {
         // TODO: async для БД
         ValidateDateEvent(data.StartAt, data.EndAt);
@@ -125,12 +131,6 @@ public class EventService(ILogger<EventService> logger) : IEventService
             logger.LogError($"Event with id {data.Id} not found");
             throw new EventNotFoundException("Event not found");
         }
-    }
-
-    public async Task<bool> ContainsByIdAsync(Guid id)
-    {
-        // TODO: async для БД
-        return _events.ContainsKey(id);
     }
 
     private void ValidateDateEvent(DateTime StartAt, DateTime EndAt)

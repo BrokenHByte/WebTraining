@@ -12,14 +12,14 @@ public class EventCoordinationService(
     ILogger<EventCoordinationService> logger)
     : IEventCoordinationService
 {
-    public Task DeleteEventWithCheck(Guid eventId)
+    public async Task DeleteEventWithCheck(Guid eventId)
     {
         // Проверяем наличие броней для события
         var booking = bookingService.GetBookings().Where(x => x.EventId == eventId).ToArray();
         logger.LogInformation($"{booking.Length} event bookings were deleted");
         foreach (var item in booking)
             bookingService.DeleteBookingById(item.Id);
-        eventService.DeleteEventById(eventId);
-        return Task.CompletedTask;
+
+        await eventService.DeleteEventByIdAsync(eventId);
     }
 }

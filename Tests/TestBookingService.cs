@@ -17,11 +17,12 @@ public class TestBookingService
         IBookingService bookingService = new BookingService(eventService, mockLogger2.Object);
         List<Guid> guidsEvent = new();
         foreach (var ev in EventData.ExpectedTestData())
-            guidsEvent.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+            guidsEvent.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 2));
 
         // Создаём невалидное
         var err = await Assert.ThrowsAsync<EventNotFoundException>(async () =>
             await bookingService.CreateBookingAsync(Guid.Empty));
+
         Assert.Equal("Event not found", err.Message);
 
         // Создаём несколько броней на одно событие
@@ -44,53 +45,59 @@ public class TestBookingService
         // Получаем бронь по невалидному ID
         var errBooking = await Assert.ThrowsAsync<BookingNotFoundException>(async () =>
             await bookingService.GetBookingByIdAsync(Guid.Empty));
+
         Assert.Equal("Booking not found", errBooking.Message);
 
         // Проверка обновления
         var processedAt = DateTime.UtcNow;
-        var updatedBooking = booking with
-        {
-            Status = Booking.BookingStatus.Confirmed, ProcessedAt = processedAt
-        };
+        var updatedBooking = (Booking)booking.Clone();
+        updatedBooking.Confirm();
+        updatedBooking.ProcessedAt = processedAt;
+
         bookingService.UpdateBooking(booking.Id, updatedBooking);
         booking = await bookingService.GetBookingByIdAsync(bookings[0].Id);
         Assert.Equal(Booking.BookingStatus.Confirmed, booking.Status);
         Assert.Equal(processedAt, booking.ProcessedAt);
 
         // Создаём бронь на удалённое событие
-        eventService.DeleteEventById(guidsEvent[0]);
+        await eventService.DeleteEventByIdAsync(guidsEvent[0]);
         err = await Assert.ThrowsAsync<EventNotFoundException>(async () =>
             await bookingService.CreateBookingAsync(guidsEvent[0]));
+
         Assert.Equal("Event not found", err.Message);
     }
+
 
     [Fact]
     public async Task TestBookingBackgroundService()
     {
-        var mockBooking = new Mock<IBookingService>(); 
-        
-        var returnBookings = new List<Booking> { new Booking() {
-            Id = Guid.NewGuid(),
-            EventId = Guid.NewGuid(),
-            Status = Booking.BookingStatus.Pending,
-            CreatedAt = DateTime.UtcNow,
-            ProcessedAt = null
-        }};
-        
+        var mockBooking = new Mock<IBookingService>();
+        var mockEvent = new Mock<IEventService>();
+        var returnBookings = new List<Booking>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                EventId = Guid.NewGuid(),
+                Status = Booking.BookingStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                ProcessedAt = null
+            }
+        };
+
         mockBooking.Setup(service => service.GetBookings()).Returns(returnBookings);
         mockBooking.Setup(service => service.UpdateBooking(It.IsAny<Guid>(), It.IsAny<Booking>()))
-            .Callback<Guid, Booking>((id, booking) =>
-            {
-                returnBookings.Add(booking);
-            });
+            .Callback<Guid, Booking>((id, booking) => { returnBookings.Add(booking); });
+
+
         var mockLogger = new Mock<ILogger<BookingBackgroundService>>();
-        BookingBackgroundService service = new(mockBooking.Object, mockLogger.Object);
-        using var cts = new CancellationTokenSource();   
+        BookingBackgroundService service = new(mockBooking.Object, mockEvent.Object, mockLogger.Object);
+        using var cts = new CancellationTokenSource();
         var startTask = service.StartAsync(cts.Token);
         await startTask;
         await Task.Delay(3000);
         await service.StopAsync(CancellationToken.None);
-        
+
         Assert.Equal(Booking.BookingStatus.Confirmed, returnBookings[1].Status);
     }
 }

@@ -25,167 +25,189 @@ public class TestEventService
 
 
     [Fact]
-    public void TestAddEvent()
+    public async Task TestAddEvent()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
+
         foreach (var ev in EventData.AddTestData())
         {
             var dataEvent = ev.Item1;
+
             if (ev.Item2.Length > 0)
             {
-                var err = Assert.Throws<EventValidationException>(() =>
-                    eventService.AddEventAsync(dataEvent.Title, dataEvent.Description, dataEvent.StartAt, dataEvent.EndAt));
+                var err = await Assert.ThrowsAsync<EventValidationException>(async () =>
+                    await eventService.AddEventAsync(dataEvent.Title, dataEvent.Description, dataEvent.StartAt,
+                        dataEvent.EndAt, 10));
+
                 Assert.Equal(err.Message, ev.Item2);
             }
             else
             {
-                eventService.AddEventAsync(dataEvent.Title, dataEvent.Description, dataEvent.StartAt, dataEvent.EndAt);
+                await eventService.AddEventAsync(dataEvent.Title, dataEvent.Description, dataEvent.StartAt,
+                    dataEvent.EndAt, 10);
             }
         }
     }
 
     [Fact]
-    public void TestDeleteEvent()
+    public async Task TestDeleteEvent()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         var addData = EventData.ExpectedTestData().ToArray();
         List<Guid> eventIds = new();
-        foreach (var ev in addData) eventIds.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+        foreach (var ev in addData)
+            eventIds.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10));
 
         // Ожидаем существование четырёх записей [0-3]
-        eventService.DeleteEventById(eventIds[0]);
-        var err = Assert.Throws<EventNotFoundException>(() => eventService.DeleteEventById(eventIds[0]));
+        await eventService.DeleteEventByIdAsync(eventIds[0]);
+        var err = await Assert.ThrowsAsync<EventNotFoundException>(async () =>
+            await eventService.DeleteEventByIdAsync(eventIds[0]));
+
         Assert.Equal("Event not found", err.Message);
-        eventService.DeleteEventById(eventIds[1]);
-        eventService.DeleteEventById(eventIds[2]);
-        var all = eventService.GetEvents().ToList();
+        await eventService.DeleteEventByIdAsync(eventIds[1]);
+        await eventService.DeleteEventByIdAsync(eventIds[2]);
+        var all = (await eventService.GetEventsAsync()).ToList();
         Assert.Equal(all.Count, EventData.ExpectedTestData().Count() - 3);
     }
 
     [Fact]
-    public void TestGetEventByIndex()
+    public async Task TestGetEventByIndex()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         List<Guid> eventIds = new();
         foreach (var ev in EventData.ExpectedTestData())
-            eventIds.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+            eventIds.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10));
 
-        var err = Assert.Throws<EventNotFoundException>(() => eventService.GetEventById(Guid.Empty));
+        var err = await Assert.ThrowsAsync<EventNotFoundException>(async () =>
+            await eventService.GetEventByIdAsync(Guid.Empty));
+
         Assert.Equal("Event not found", err.Message);
 
-        var firstEvent = eventService.GetEventById(eventIds.First());
+        var firstEvent = await eventService.GetEventByIdAsync(eventIds.First());
         Assert.NotNull(firstEvent);
-        var lastEvent = eventService.GetEventById(eventIds.Last());
+        var lastEvent = await eventService.GetEventByIdAsync(eventIds.Last());
         Assert.Equal(EventData.ExpectedTestData().Last().Title, lastEvent.Title);
     }
 
     [Fact]
-    public void TestGetAllEvent()
+    public async Task TestGetAllEvent()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in EventData.ExpectedTestData())
-            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
+            await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10);
 
         // Ожидаем существование четырёх записей [0-3]
-        var events = eventService.GetEvents().ToList();
+        var events = (await eventService.GetEventsAsync()).ToList();
         Assert.Equal(EventData.ExpectedTestData().Count(), events.Count);
     }
 
     [Fact]
-    public void TestGetAllWithFilterEvent()
+    public async Task TestGetAllWithFilterEvent()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in EventData.ExpectedTestData())
-            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
+            await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10);
 
         // -------- Заголовки -------
         // Все по началу строки заголовка
-        var targetCount = EventData.ExpectedTestData().Count();
-        var events = eventService.GetEvents("").ToList();
+        int targetCount = EventData.ExpectedTestData().Count();
+        var events = (await eventService.GetEventsAsync("")).ToList();
         Assert.Equal(targetCount, events.Count);
-        events = eventService.GetEvents("Tit").ToList();
+        events = (await eventService.GetEventsAsync("Tit")).ToList();
         Assert.Equal(targetCount - 1, events.Count);
 
         // Конкретное значение
-        events = eventService.GetEvents("Title2").ToList();
+        events = (await eventService.GetEventsAsync("Title2")).ToList();
         Assert.Single(events);
 
         // Не существующее значение заголовка
-        events = eventService.GetEvents("Title1").ToList();
+        events = (await eventService.GetEventsAsync("Title1")).ToList();
         Assert.Empty(events);
 
         // -------- Даты -------
         // Все добавленные   
-        events = eventService.GetEvents(null, EventData.dateExample).ToList();
+        events = (await eventService.GetEventsAsync(null, EventData.dateExample)).ToList();
         Assert.Equal(targetCount, events.Count);
-        events = eventService.GetEvents(null, EventData.dateExample - EventData.OffsetShort).ToList();
+        events = (await eventService.GetEventsAsync(null, EventData.dateExample - EventData.OffsetShort)).ToList();
         Assert.Equal(targetCount, events.Count);
         // Одно событие, Test 6
-        events = eventService.GetEvents(null, EventData.dateExample + EventData.OffsetShort).ToList();
+        events = (await eventService.GetEventsAsync(null, EventData.dateExample + EventData.OffsetShort)).ToList();
         Assert.Single(events);
         // Никаких событий для поздней даты
-        events = eventService.GetEvents(null, EventData.dateExample + EventData.OffsetLong).ToList();
+        events = (await eventService.GetEventsAsync(null, EventData.dateExample + EventData.OffsetLong)).ToList();
         Assert.Empty(events);
 
-        events = eventService.GetEvents(null, null, EventData.dateExample + EventData.OffsetLong).ToList();
+        events = (await eventService.GetEventsAsync(null, null, EventData.dateExample + EventData.OffsetLong)).ToList();
         Assert.Equal(targetCount, events.Count);
-        events = eventService.GetEvents(null, null, EventData.dateExample + EventData.OffsetShort).ToList();
+        events = (await eventService.GetEventsAsync(null, null, EventData.dateExample + EventData.OffsetShort))
+            .ToList();
+
         Assert.Equal(2, events.Count);
-        events = eventService.GetEvents(null, null, EventData.dateExample).ToList();
+        events = (await eventService.GetEventsAsync(null, null, EventData.dateExample)).ToList();
         Assert.Empty(events);
-        events = eventService.GetEvents(null, null, EventData.dateExample - EventData.OffsetShort).ToList();
+        events = (await eventService.GetEventsAsync(null, null, EventData.dateExample - EventData.OffsetShort))
+            .ToList();
+
         Assert.Empty(events);
 
         // Смешаные кейсы
-        events = eventService.GetEvents("Tit", EventData.dateExample).ToList();
+        events = (await eventService.GetEventsAsync("Tit", EventData.dateExample)).ToList();
         Assert.Equal(targetCount - 1, events.Count);
-        events = eventService.GetEvents("Tit", EventData.dateExample + EventData.OffsetLong).ToList();
+        events = (await eventService.GetEventsAsync("Tit", EventData.dateExample + EventData.OffsetLong)).ToList();
         Assert.Empty(events);
-        events = eventService.GetEvents("Tit", null, EventData.dateExample - EventData.OffsetLong).ToList();
-        Assert.Empty(events);
-        events = eventService.GetEvents("", EventData.dateExample, EventData.dateExample + EventData.OffsetLong)
+        events = (await eventService.GetEventsAsync("Tit", null, EventData.dateExample - EventData.OffsetLong))
             .ToList();
+
+        Assert.Empty(events);
+        events = (await eventService.GetEventsAsync("", EventData.dateExample,
+                EventData.dateExample + EventData.OffsetLong))
+            .ToList();
+
         Assert.Equal(targetCount, events.Count);
     }
 
     [Fact]
-    public void TestUpdateEvent()
+    public async Task TestUpdateEvent()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         List<Guid> eventIds = new();
         foreach (var ev in EventData.ExpectedTestData())
-            eventIds.Add(eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt));
+            eventIds.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10));
 
         var evs = EventData.UpdateTestData().ToList();
-        eventService.UpdateEvent(eventIds[0], evs[0].Item1);
-        var err = Assert.Throws<EventValidationException>(() =>
-            eventService.UpdateEvent(eventIds[1], evs[1].Item1));
+        await eventService.UpdateEventAsync(eventIds[0], evs[0].Item1);
+        var err = await Assert.ThrowsAsync<EventValidationException>(() =>
+            eventService.UpdateEventAsync(eventIds[1], evs[1].Item1));
+
         Assert.Equal(err.Message, EventData.messageInvalid);
-        eventService.UpdateEvent(eventIds[2], evs[2].Item1);
-        var err2 = Assert.Throws<EventNotFoundException>(() => eventService.UpdateEvent(Guid.Empty, evs[3].Item1));
+
+        await eventService.UpdateEventAsync(eventIds[2], evs[2].Item1);
+        var err2 = await Assert.ThrowsAsync<EventNotFoundException>(async () =>
+            await eventService.UpdateEventAsync(Guid.Empty, evs[3].Item1));
+
         Assert.Equal("Event not found", err2.Message);
     }
 
     [Fact]
-    public void TestPageEvent()
+    public async Task TestPageEvent()
     {
         var mockLogger = new Mock<ILogger<EventService>>();
         IEventService eventService = new EventService(mockLogger.Object);
         foreach (var ev in EventData.ExpectedPageTestData())
-            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt);
+            eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10);
 
-        var events = eventService.GetEvents().ToList();
+        var events = (await eventService.GetEventsAsync()).ToList();
         const int sizePage = 30;
-        var page1 = eventService.GetPage(events, 1, sizePage).ToList();
-        var page2 = eventService.GetPage(events, 2, sizePage).ToList();
-        var page3 = eventService.GetPage(events, 3, sizePage).ToList();
-        var page4 = eventService.GetPage(events, 4, sizePage).ToList();
+        var page1 = (await eventService.GetPageAsync(events, 1, sizePage)).ToList();
+        var page2 = (await eventService.GetPageAsync(events, 2, sizePage)).ToList();
+        var page3 = (await eventService.GetPageAsync(events, 3, sizePage)).ToList();
+        var page4 = (await eventService.GetPageAsync(events, 4, sizePage)).ToList();
 
         Assert.Equal(30, page1.Count);
         Assert.Equal(30, page2.Count);
@@ -195,9 +217,16 @@ public class TestEventService
         Assert.Equal(page1[0].Title, events[0].Title);
         Assert.Equal(page4[9].Title, events.Last().Title);
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => eventService.GetPage(events, 0, sizePage));
-        Assert.Throws<ArgumentOutOfRangeException>(() => eventService.GetPage(events, 1, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => eventService.GetPage(events, -100, sizePage));
-        Assert.Throws<ArgumentOutOfRangeException>(() => eventService.GetPage(events, 1, -100));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await eventService.GetPageAsync(events, 0, sizePage));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await eventService.GetPageAsync(events, 1, 0));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await eventService.GetPageAsync(events, -100, sizePage));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await eventService.GetPageAsync(events, 1, -100));
     }
 }
