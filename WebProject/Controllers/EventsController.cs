@@ -113,7 +113,7 @@ public class EventsController(
             TotalSeats = data.TotalSeats
         };
 
-        eventService.UpdateEventAsync(id, oneEvent);
+        await eventService.UpdateEventAsync(id, oneEvent);
         return Ok();
     }
 

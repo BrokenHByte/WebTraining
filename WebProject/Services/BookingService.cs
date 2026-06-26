@@ -1,4 +1,5 @@
-using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Models;
 
@@ -10,19 +11,19 @@ public interface IBookingService
     Task<Booking> GetBookingByIdAsync(Guid bookingId);
     IEnumerable<Booking> GetBookings();
     IEnumerable<Booking> GetPending();
-    void UpdateBooking(Guid bookingId, Booking data);
-    void DeleteBookingById(Guid bookingId);
+    Task UpdateBooking(Guid bookingId, Booking data);
+    Task DeleteBookingById(Guid bookingId);
 }
 
-public class BookingService(IEventService eventService, ILogger<BookingService> logger) : IBookingService
+public class BookingService(IEventService eventService, ILogger<BookingService> logger, AppDbContext db)
+    : IBookingService
 {
-    private readonly ConcurrentDictionary<Guid, Booking> _bookings = new();
-    private readonly SemaphoreSlim _bookingSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
 
     public async Task<Booking> CreateBookingAsync(Guid eventId)
     {
         var guid = Guid.NewGuid();
-        await _bookingSemaphore.WaitAsync();
+        await BookingSemaphore.WaitAsync();
 
         try
         {
@@ -35,10 +36,10 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
         }
         finally
         {
-            _bookingSemaphore.Release();
+            BookingSemaphore.Release();
         }
 
-        _bookings.TryAdd(guid, new Booking
+        var booking = await db.Bookings.AddAsync(new Booking
         {
             Id = guid,
             EventId = eventId,
@@ -46,69 +47,55 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
             CreatedAt = DateTime.UtcNow,
             ProcessedAt = null
         });
-
-        return _bookings[guid];
+        await db.SaveChangesAsync();
+        return booking.Entity;
     }
 
-    public Task<Booking> GetBookingByIdAsync(Guid bookingId)
+    public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
     {
-        if (!_bookings.TryGetValue(bookingId, out var bookingById))
+        var booking = await db.Bookings.FindAsync(bookingId);
+        if (booking == null)
         {
             logger.LogError("Booking not found");
             throw new BookingNotFoundException("Booking not found");
         }
 
-        return Task.FromResult(bookingById);
+        return booking;
     }
 
     public IEnumerable<Booking> GetBookings()
     {
-        return _bookings.Select(x => x.Value);
+        return db.Bookings.ToList();
     }
 
-    public void UpdateBooking(Guid bookingId, Booking data)
+    public async Task UpdateBooking(Guid bookingId, Booking data)
     {
-        if (!_bookings.TryGetValue(bookingId, out var existingBooking))
+        var bookingEntity = await db.Bookings.FindAsync(bookingId);
+        if (bookingEntity != null)
+        {
+            bookingEntity.Status = data.Status;
+            bookingEntity.ProcessedAt = data.ProcessedAt;
+            await db.SaveChangesAsync();
+            return;
+        }
+
+        logger.LogError($"Booking with id {bookingId} not found");
+        throw new BookingNotFoundException($"Booking {bookingId} not found");
+    }
+
+    public async Task DeleteBookingById(Guid bookingId)
+    {
+        var oneBooking = await db.Bookings.Where(x => x.Id == bookingId).FirstOrDefaultAsync();
+        if (oneBooking == null)
         {
             logger.LogError($"Booking with id {bookingId} not found");
             throw new BookingNotFoundException($"Booking {bookingId} not found");
         }
 
-        var updatedBooking = new Booking
-        {
-            Id = existingBooking.Id,
-            EventId = existingBooking.EventId,
-            Status = data.Status,
-            CreatedAt = existingBooking.CreatedAt,
-            ProcessedAt = data.ProcessedAt
-        };
-
-        if (!_bookings.TryUpdate(bookingId, updatedBooking, existingBooking))
-        {
-            logger.LogError($"Booking with id {bookingId} not found");
-            throw new BookingNotFoundException($"Booking {bookingId} not found");
-        }
-    }
-
-    public IEnumerable<Booking> GetPending()
-    {
-        return _bookings.Select(x => x.Value).Where(x => x.Status == Booking.BookingStatus.Pending);
-    }
-
-    public async void DeleteBookingById(Guid bookingId)
-    {
-        var guidEvent = Guid.Empty;
-        if (_bookings.TryGetValue(bookingId, out var eventToDelete))
-            guidEvent = eventToDelete.EventId;
-
-        if (!_bookings.TryRemove(bookingId, out _))
-        {
-            logger.LogError($"Booking with id {bookingId} not found");
-            throw new BookingNotFoundException($"Booking {bookingId} not found");
-        }
-
-        await _bookingSemaphore.WaitAsync();
-
+        var guidEvent = oneBooking.EventId;
+        db.Bookings.Remove(oneBooking);
+        await db.SaveChangesAsync();
+        await BookingSemaphore.WaitAsync();
         try
         {
             var eventOne = await eventService.GetEventByIdAsync(guidEvent);
@@ -116,7 +103,12 @@ public class BookingService(IEventService eventService, ILogger<BookingService> 
         }
         finally
         {
-            _bookingSemaphore.Release();
+            BookingSemaphore.Release();
         }
+    }
+
+    public IEnumerable<Booking> GetPending()
+    {
+        return db.Bookings.Where(x => x.Status == Booking.BookingStatus.Pending);
     }
 }

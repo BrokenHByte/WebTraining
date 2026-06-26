@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
+using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Services;
 
@@ -27,8 +30,14 @@ public class TestEventService
     [Fact]
     public async Task TestAddEvent()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
 
         foreach (var ev in EventData.AddTestData())
         {
@@ -53,8 +62,14 @@ public class TestEventService
     [Fact]
     public async Task TestDeleteEvent()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
         var addData = EventData.ExpectedTestData().ToArray();
         List<Guid> eventIds = new();
         foreach (var ev in addData)
@@ -75,8 +90,14 @@ public class TestEventService
     [Fact]
     public async Task TestGetEventByIndex()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
         List<Guid> eventIds = new();
         foreach (var ev in EventData.ExpectedTestData())
             eventIds.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10));
@@ -95,8 +116,14 @@ public class TestEventService
     [Fact]
     public async Task TestGetAllEvent()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
         foreach (var ev in EventData.ExpectedTestData())
             await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10);
 
@@ -107,9 +134,15 @@ public class TestEventService
 
     [Fact]
     public async Task TestGetAllWithFilterEvent()
-    {
+    {     
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
         foreach (var ev in EventData.ExpectedTestData())
             await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10);
 
@@ -174,8 +207,14 @@ public class TestEventService
     [Fact]
     public async Task TestUpdateEvent()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
         List<Guid> eventIds = new();
         foreach (var ev in EventData.ExpectedTestData())
             eventIds.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10));
@@ -197,8 +236,14 @@ public class TestEventService
     [Fact]
     public async Task TestPageEvent()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+
         var mockLogger = new Mock<ILogger<EventService>>();
-        IEventService eventService = new EventService(mockLogger.Object);
+        IEventService eventService = new EventService(mockLogger.Object, serviceProvider.GetRequiredService<AppDbContext>());
         foreach (var ev in EventData.ExpectedPageTestData())
             eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 10);
 
