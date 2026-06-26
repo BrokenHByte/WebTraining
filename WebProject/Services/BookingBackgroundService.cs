@@ -1,11 +1,11 @@
+using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Models;
 
 namespace WebProject.Services;
 
 public class BookingBackgroundService(
-    IBookingService bookingService,
-    IEventService eventService,
+    IServiceScopeFactory scopeFactory,
     ILogger<BookingBackgroundService> logger)
     : BackgroundService
 {
@@ -15,18 +15,28 @@ public class BookingBackgroundService(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var pendingBookings = bookingService.GetPending().ToList();
-            var tasks = pendingBookings.Select(booking => ProcessBookingAsync(booking, stoppingToken));
-            await Task.WhenAll(tasks); // TODO: лучше ограничить кол-во потоков
-            if (pendingBookings.Count > 0) logger.LogInformation($"Booking {pendingBookings.Count} bookings updated.");
+            List<Booking> pendingBookings;
+            using (var scope = scopeFactory.CreateScope())
+            {
+                var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
+                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+                pendingBookings = bookingService.GetPending().ToList();
+                var tasks = pendingBookings.Select(booking =>
+                    ProcessBookingAsync(eventService, bookingService, booking, stoppingToken));
+                await Task.WhenAll(tasks);
+                if (pendingBookings.Count > 0)
+                    logger.LogInformation($"Booking {pendingBookings.Count} bookings updated.");
+            }
 
             await Task.Delay(100, stoppingToken);
         }
 
+
         logger.LogInformation("Booking background service stopped");
     }
 
-    private async Task ProcessBookingAsync(Booking booking, CancellationToken stoppingToken)
+    private async Task ProcessBookingAsync(IEventService eventService, IBookingService bookingService, Booking booking,
+        CancellationToken stoppingToken)
     {
         await Task.Delay(2000, stoppingToken);
         Event? existedEvent = null;
@@ -38,13 +48,12 @@ public class BookingBackgroundService(
         try
         {
             await _processingSemaphore.WaitAsync(stoppingToken);
-            // existedEvent может либо вернуться, либо exception. Null не может быть
-            existedEvent = await eventService.GetEventByIdAsync(cloneBooking.EventId); // TODO: stoppingToken
-            bookingService.UpdateBooking(booking.Id, cloneBooking.Confirm()); // TODO: await, stoppingToken
+            existedEvent = await eventService.GetEventByIdAsync(cloneBooking.EventId); 
+            bookingService.UpdateBooking(booking.Id, cloneBooking.Confirm());
         }
         catch (EventNotFoundException ex)
         {
-            bookingService.UpdateBooking(booking.Id, cloneBooking.Reject()); // TODO: await, stoppingToken
+            bookingService.UpdateBooking(booking.Id, cloneBooking.Reject());
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. Event not found");
         }
         catch (OperationCanceledException ex)
@@ -53,7 +62,7 @@ public class BookingBackgroundService(
         }
         catch (Exception ex)
         {
-            bookingService.UpdateBooking(booking.Id, cloneBooking.Reject()); // TODO: await, stoppingToken
+            bookingService.UpdateBooking(booking.Id, cloneBooking.Reject());
             if (existedEvent != null) existedEvent.ReleaseSeats();
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. ");
         }

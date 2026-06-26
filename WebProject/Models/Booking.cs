@@ -14,6 +14,7 @@ public class Booking : ICloneable
     public BookingStatus Status { get; set; }
     public DateTime CreatedAt { get; init; }
     public DateTime? ProcessedAt { get; set; }
+    public Event Event { get; set; }
 
     public object Clone()
     {

@@ -1,31 +1,33 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace WebProject.Models;
 
 public class Event
 {
-    public int AvailableSeats;
+    public Event()
+    {
+        Title = null!;
+    }
+
     public Guid Id { get; init; }
-    public required string Title { get; init; }
-    public string? Description { get; init; }
-    public DateTime StartAt { get; init; }
-    public DateTime EndAt { get; init; }
-    public int TotalSeats { get; init; }
+    public required string Title { get; set; }
+    public string? Description { get; set; }
+    public DateTime StartAt { get; set; }
+    public DateTime EndAt { get; set; }
+    public int TotalSeats { get; set; }
+    public int AvailableSeats { get; set; }
+    public List<Booking> Bookings { get; set; }
 
     public bool TryReserveSeats(int count = 1)
     {
-        int copySeats;
-
-        do
-        {
-            copySeats = AvailableSeats;
-            if (copySeats < count)
-                return false;
-        } while (Interlocked.CompareExchange(ref AvailableSeats, copySeats - count, copySeats) != copySeats);
-
+        if (AvailableSeats < count)
+            return false;
+        AvailableSeats -= count;
         return true;
     }
 
     public void ReleaseSeats(int count = 1)
     {
-        Interlocked.Add(ref AvailableSeats, count);
+        AvailableSeats += count;
     }
 }

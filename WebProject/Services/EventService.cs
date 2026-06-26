@@ -1,4 +1,5 @@
-using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Models;
 
@@ -19,21 +20,16 @@ public interface IEventService
 }
 
 // Синглтоновский сервис
-public class EventService(ILogger<EventService> logger) : IEventService
+public class EventService(ILogger<EventService> logger, AppDbContext db) : IEventService
 {
-    private readonly ConcurrentDictionary<Guid, Event> _events = new();
-    // При конкурентном доступе возможно большинство ошибок ниже, это штатная ситуация
-    // но всё равно довольно редкая
-
     public async Task<IEnumerable<Event>> GetEventsAsync(string? title = null, DateTime? from = null,
         DateTime? to = null)
     {
-        // TODO: async для БД
-        return _events.Where(x =>
-                (from == null || x.Value.StartAt >= from) &&
-                (to == null || x.Value.EndAt <= to) &&
-                (title == null || x.Value.Title.Contains(title, StringComparison.OrdinalIgnoreCase)))
-            .Select(x => x.Value);
+        return await db.Events.Where(x =>
+                (from == null || x.StartAt >= from) &&
+                (to == null || x.EndAt <= to) &&
+                (title == null || x.Title.Contains(title, StringComparison.OrdinalIgnoreCase)))
+            .Select(x => x).ToListAsync();
     }
 
     public async Task<IEnumerable<Event>> GetPageAsync(IEnumerable<Event> events, int page, int pageSize)
@@ -58,84 +54,78 @@ public class EventService(ILogger<EventService> logger) : IEventService
 
     public async Task<Event> GetEventByIdAsync(Guid id)
     {
-        // TODO: async для БД
-        if (!_events.TryGetValue(id, out var eventById))
-        {
-            logger.LogError($"Event with id {id} not found");
-            throw new EventNotFoundException("Event not found");
-        }
-
-        return eventById;
+        var eventOne = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
+        if (eventOne != null)
+            return eventOne;
+        logger.LogError($"Event with id {id} not found");
+        throw new EventNotFoundException("Event not found");
     }
 
     public async Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt,
-        int TotalSeats)
+        int totalSeats)
     {
-        // TODO: async для БД
         ValidateDateEvent(startAt, endAt);
         var newId = Guid.NewGuid();
-        var newEvent = new Event
+        await db.Events.AddAsync(new Event
         {
             Id = newId,
             Title = title,
             Description = description,
             StartAt = startAt,
             EndAt = endAt,
-            TotalSeats = TotalSeats,
-            AvailableSeats = TotalSeats
-        };
-
-        _events.TryAdd(newId, newEvent);
+            TotalSeats = totalSeats,
+            AvailableSeats = totalSeats
+        });
+        await db.SaveChangesAsync();
         return newId;
     }
 
     public async Task<bool> ContainsByIdAsync(Guid id)
     {
-        // TODO: async для БД
-        return _events.ContainsKey(id);
+        return await db.Events.AnyAsync(x => x.Id == id);
     }
 
     public async Task DeleteEventByIdAsync(Guid id)
     {
-        // TODO: async для БД
-        if (!_events.TryRemove(id, out _))
+        var oneEvent = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
+        if (oneEvent == null)
         {
             logger.LogError($"Event with id {id} not found");
             throw new EventNotFoundException("Event not found");
         }
+
+        db.Events.Remove(oneEvent);
+        await db.SaveChangesAsync();
     }
 
     public async Task UpdateEventAsync(Guid id, Event data)
     {
-        // TODO: async для БД
         ValidateDateEvent(data.StartAt, data.EndAt);
-
-        if (!_events.TryGetValue(id, out var existingEvent))
+        var eventEntity = await db.Events.FindAsync(id);
+        if (eventEntity != null)
         {
-            logger.LogError($"Event with id {id} not found");
-            throw new EventNotFoundException("Event not found");
+            eventEntity.Title = data.Title;
+            eventEntity.Description = data.Description;
+            eventEntity.StartAt = data.StartAt;
+            eventEntity.EndAt = data.EndAt;
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch
+            {
+                throw new InvalidOperationException();
+            }
+            return;
         }
 
-        var updatedEvent = new Event
-        {
-            Id = existingEvent.Id,
-            Title = data.Title,
-            Description = data.Description,
-            StartAt = data.StartAt,
-            EndAt = data.EndAt,
-            TotalSeats = existingEvent.TotalSeats // Обновление количества мест недопустимо для такой модели
-        };
-
-        if (!_events.TryUpdate(id, updatedEvent, existingEvent))
-        {
-            logger.LogError($"Event with id {data.Id} not found");
-            throw new EventNotFoundException("Event not found");
-        }
+        logger.LogError($"Event with id {id} not found");
+        throw new EventNotFoundException("Event not found");
     }
 
-    private void ValidateDateEvent(DateTime StartAt, DateTime EndAt)
+    private void ValidateDateEvent(DateTime startAt, DateTime endAt)
     {
-        if (EndAt <= StartAt)
+        if (endAt <= startAt)
         {
             logger.LogError("Event is invalid: EndAt <= StartAt");
             throw new EventValidationException("Event with id is invalid: EndAt <= StartAt");

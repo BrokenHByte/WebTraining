@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Models;
 using WebProject.Services;
@@ -11,10 +14,17 @@ public class TestBookingService
     [Fact]
     public async Task TestBooking()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
+        
         var mockLogger1 = new Mock<ILogger<EventService>>();
         var mockLogger2 = new Mock<ILogger<BookingService>>();
-        IEventService eventService = new EventService(mockLogger1.Object);
-        IBookingService bookingService = new BookingService(eventService, mockLogger2.Object);
+        IEventService eventService = new EventService(mockLogger1.Object, serviceProvider.GetRequiredService<AppDbContext>());
+        IBookingService bookingService = new BookingService(eventService, mockLogger2.Object, serviceProvider.GetRequiredService<AppDbContext>());
         List<Guid> guidsEvent = new();
         foreach (var ev in EventData.ExpectedTestData())
             guidsEvent.Add(await eventService.AddEventAsync(ev.Title, ev.Description, ev.StartAt, ev.EndAt, 2));
@@ -52,7 +62,7 @@ public class TestBookingService
         var processedAt = DateTime.UtcNow;
         var updatedBooking = (Booking)booking.Clone();
         updatedBooking.Confirm();
-        bookingService.UpdateBooking(booking.Id, updatedBooking);
+        await bookingService.UpdateBooking(booking.Id, updatedBooking);
         booking = await bookingService.GetBookingByIdAsync(bookings[0].Id);
         Assert.Equal(Booking.BookingStatus.Confirmed, booking.Status);
         Assert.NotNull(booking.ProcessedAt);
@@ -60,7 +70,7 @@ public class TestBookingService
         // Проверка обновления c Reject
         updatedBooking = (Booking)booking.Clone();
         updatedBooking.Reject();
-        bookingService.UpdateBooking(booking.Id, updatedBooking);
+        await bookingService.UpdateBooking(booking.Id, updatedBooking);
         booking = await bookingService.GetBookingByIdAsync(bookings[0].Id);
         Assert.Equal(Booking.BookingStatus.Rejected, booking.Status);
         Assert.NotNull(booking.ProcessedAt);
@@ -72,8 +82,9 @@ public class TestBookingService
         Assert.Equal("No available seats for this event", err2.Message);
 
         // Проверка что места освобождаются если удаляем бронь
+        bookings = bookingService.GetBookings().ToArray();
         var bookingGuid = bookings.Where(x => x.EventId == guidsEvent[0]).ToList();
-        bookingService.DeleteBookingById(bookingGuid[0].Id);
+        await bookingService.DeleteBookingById(bookingGuid[0].Id);
         Event? eventTest = null;
         if (bookingGuid.Count > 0) eventTest = await eventService.GetEventByIdAsync(bookingGuid[0].EventId);
 
@@ -106,13 +117,18 @@ public class TestBookingService
         // Проверим кейс
         //Дано: событие на 5 мест, 20 конкурентных запросов.
         //    Ожидается: ровно 5 успешных броней, 15 — NoAvailableSeatsException,
-
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLoggerEvent = new Mock<ILogger<EventService>>();
         var mockLoggerBooking = new Mock<ILogger<BookingService>>();
-        var eventService = new EventService(mockLoggerEvent.Object);
+        var eventService = new EventService(mockLoggerEvent.Object, serviceProvider.GetRequiredService<AppDbContext>());
         await eventService.AddEventAsync("Test", "Test", DateTime.Now, DateTime.Now + new TimeSpan(1000), 5);
 
-        var bookingService = new BookingService(eventService, mockLoggerBooking.Object);
+        var bookingService = new BookingService(eventService, mockLoggerBooking.Object, serviceProvider.GetRequiredService<AppDbContext>());
         var tasks = new List<Task>();
         var idEvent = (await eventService.GetEventsAsync()).ToList()[0].Id;
 
@@ -141,7 +157,7 @@ public class TestBookingService
         Assert.Equal(0, eventResult.AvailableSeats);
 
         var mockLogger = new Mock<ILogger<BookingBackgroundService>>();
-        BookingBackgroundService service = new(bookingService, eventService, mockLogger.Object);
+        BookingBackgroundService service = new BookingBackgroundService(serviceProvider.GetRequiredService<IServiceScopeFactory>(), mockLogger.Object);
         using var cts = new CancellationTokenSource();
         await service.StartAsync(cts.Token);
         await Task.Delay(3000);
@@ -154,12 +170,18 @@ public class TestBookingService
     [Fact]
     public async Task TestBookingBackgroundService2()
     {
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName)); 
+        var serviceProvider = services.BuildServiceProvider();
+        
         var mockLoggerEvent = new Mock<ILogger<EventService>>();
         var mockLoggerBooking = new Mock<ILogger<BookingService>>();
-        var eventService = new EventService(mockLoggerEvent.Object);
+        var eventService = new EventService(mockLoggerEvent.Object, serviceProvider.GetRequiredService<AppDbContext>());
         await eventService.AddEventAsync("Test", "Test", DateTime.Now, DateTime.Now + new TimeSpan(1000), 10);
 
-        var bookingService = new BookingService(eventService, mockLoggerBooking.Object);
+        var bookingService = new BookingService(eventService, mockLoggerBooking.Object, serviceProvider.GetRequiredService<AppDbContext>());
         var tasks = new List<Task>();
         var idEvent = (await eventService.GetEventsAsync()).ToList()[0].Id;
 
@@ -174,7 +196,7 @@ public class TestBookingService
         Assert.Single(bookings.Select(e => e.EventId).Distinct());
 
         var mockLogger = new Mock<ILogger<BookingBackgroundService>>();
-        BookingBackgroundService service = new(bookingService, eventService, mockLogger.Object);
+        BookingBackgroundService service = new(serviceProvider.GetRequiredService<IServiceScopeFactory>(), mockLogger.Object);
         using var cts = new CancellationTokenSource();
         await service.StartAsync(cts.Token);
         await Task.Delay(3000);
