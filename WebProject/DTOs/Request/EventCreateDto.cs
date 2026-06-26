@@ -17,7 +17,10 @@ public class EventCreateDto : IValidatableObject
     [Required(AllowEmptyStrings = true, ErrorMessage = "Дата окончания обязательна к заполнению")]
     public DateTime EndAt { get; set; }
 
-
+    [Range(1, int.MaxValue, ErrorMessage = "Значение должно быть больше 0")]
+    public int TotalSeats { get; set; }
+    
+    
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (EndAt <= StartAt)

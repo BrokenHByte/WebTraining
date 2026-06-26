@@ -22,7 +22,7 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
 
             if (context.Response.HasStarted) return;
 
-            var statusCode = MapStatusCode(ex);
+            int statusCode = MapStatusCode(ex);
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json";
 
@@ -32,6 +32,7 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
                 Title = ex.GetType().Name,
                 Detail = ex.Message
             };
+
             await context.Response.WriteAsJsonAsync(error);
         }
 
@@ -43,6 +44,7 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
                 EventValidationException => StatusCodes.Status400BadRequest,
                 BookingNotFoundException => StatusCodes.Status404NotFound,
                 ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
+                NoAvailableSeatsException => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
         }
