@@ -1,0 +1,89 @@
+﻿using Microsoft.EntityFrameworkCore;
+using WebProject.DataAccess;
+using WebProject.Exceptions;
+using WebProject.Models;
+
+namespace WebProject.Repositories;
+
+public interface IBookingRepository
+{
+    Task<Booking> CreateAsync(Guid eventId);
+    Task<Booking> GetByIdAsync(Guid bookingId);
+    IQueryable<Booking> GetAll();
+    IQueryable<Booking> GetPending();
+    Task Update(Guid bookingId, Booking data);
+    Task DeleteById(Guid bookingId);
+}
+
+public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db)
+    : IBookingRepository
+{
+    public async Task<Booking> CreateAsync(Guid eventId)
+    {
+        var guid = Guid.NewGuid();
+        var booking = await db.Bookings.AddAsync(new Booking
+        {
+            Id = guid,
+            EventId = eventId,
+            Status = Booking.BookingStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            ProcessedAt = null
+        });
+
+        await db.SaveChangesAsync();
+        return booking.Entity;
+    }
+
+    public async Task<Booking> GetByIdAsync(Guid bookingId)
+    {
+        var booking = await db.Bookings.FindAsync(bookingId);
+
+        if (booking == null)
+        {
+            logger.LogError("Booking not found");
+            throw new BookingNotFoundException("Booking not found");
+        }
+
+        return booking;
+    }
+
+    public IQueryable<Booking> GetAll()
+    {
+        return db.Bookings;
+    }
+
+    public IQueryable<Booking> GetPending()
+    {
+        return db.Bookings.Where(x => x.Status == Booking.BookingStatus.Pending);
+    }
+
+    public async Task Update(Guid bookingId, Booking data)
+    {
+        var bookingEntity = await db.Bookings.FindAsync(bookingId);
+
+        if (bookingEntity != null)
+        {
+            bookingEntity.Status = data.Status;
+            bookingEntity.ProcessedAt = data.ProcessedAt;
+            await db.SaveChangesAsync();
+            return;
+        }
+
+        logger.LogError($"Booking with id {bookingId} not found");
+        throw new BookingNotFoundException($"Booking {bookingId} not found");
+    }
+
+    public async Task DeleteById(Guid bookingId)
+    {
+        var oneBooking = await db.Bookings.Where(x => x.Id == bookingId).FirstOrDefaultAsync();
+
+        if (oneBooking == null)
+        {
+            logger.LogError($"Booking with id {bookingId} not found");
+            throw new BookingNotFoundException($"Booking {bookingId} not found");
+        }
+
+        db.Bookings.Remove(oneBooking);
+        await db.SaveChangesAsync();
+    }
+}
