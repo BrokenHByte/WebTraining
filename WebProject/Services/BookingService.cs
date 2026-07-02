@@ -8,8 +8,8 @@ public interface IBookingService
 {
     Task<Booking> CreateAsync(Guid eventId);
     Task<Booking> GetByIdAsync(Guid bookingId);
-    IEnumerable<Booking> GetAll();
-    IEnumerable<Booking> GetPending();
+    IQueryable<Booking> GetAll();
+    IQueryable<Booking> GetPending();
     Task Update(Guid bookingId, Booking data);
     Task DeleteById(Guid bookingId);
 }
@@ -22,45 +22,38 @@ public class BookingService(
 {
     private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
 
-    public IEnumerable<Booking> GetPending()
+    public IQueryable<Booking> GetPending()
     {
-        return db.Bookings.Where(x => x.Status == Booking.BookingStatus.Pending);
+        return bookingRepository.GetPending();
     }
 
-    public async Task UpdateBooking(Guid bookingId, Booking data)
+    public async Task Update(Guid bookingId, Booking data)
     {
-        var bookingEntity = await db.Bookings.FindAsync(bookingId);
-
-        if (bookingEntity != null)
+        await bookingRepository.Update(bookingId, data);
+        var bookingEntity = await bookingRepository.GetByIdAsync(bookingId);
+        // По идее мжно напрямую менять bookingEntity, но это сразу погружение в контекст.
+        // По этому через копию
+        await bookingRepository.Update(bookingId, new Booking
         {
-            bookingEntity.Status = data.Status;
-            bookingEntity.ProcessedAt = data.ProcessedAt;
-            await db.SaveChangesAsync();
-            return;
-        }
-
-        logger.LogError($"Booking with id {bookingId} not found");
-        throw new BookingNotFoundException($"Booking {bookingId} not found");
+            Id = bookingEntity.Id,
+            EventId = bookingEntity.EventId,
+            Status = data.Status,
+            CreatedAt = bookingEntity.CreatedAt,
+            ProcessedAt = data.ProcessedAt
+        });
     }
 
-    public async Task DeleteBookingById(Guid bookingId)
+    public async Task DeleteById(Guid bookingId)
     {
-        var oneBooking = await db.Bookings.Where(x => x.Id == bookingId).FirstOrDefaultAsync();
+        var bookingEntity = await bookingRepository.GetByIdAsync(bookingId);
+        var eventId = bookingEntity.EventId;
+        await bookingRepository.DeleteById(bookingId);
 
-        if (oneBooking == null)
-        {
-            logger.LogError($"Booking with id {bookingId} not found");
-            throw new BookingNotFoundException($"Booking {bookingId} not found");
-        }
-
-        var guidEvent = oneBooking.EventId;
-        db.Bookings.Remove(oneBooking);
-        await db.SaveChangesAsync();
         await BookingSemaphore.WaitAsync();
 
         try
         {
-            var eventOne = await eventService.GetEventByIdAsync(guidEvent);
+            var eventOne = await eventService.GetEventByIdAsync(eventId);
             eventOne.ReleaseSeats();
         }
         finally
@@ -69,16 +62,13 @@ public class BookingService(
         }
     }
 
-    public async Task<Booking> CreateBookingAsync(Guid eventId)
+    public async Task<Booking> CreateAsync(Guid eventId)
     {
-        var guid = Guid.NewGuid();
         await BookingSemaphore.WaitAsync();
 
         try
         {
             var eventOne = await eventService.GetEventByIdAsync(eventId);
-            if (eventOne == null)
-                throw new EventNotFoundException("Event not found");
 
             if (!eventOne.TryReserveSeats())
                 throw new NoAvailableSeatsException("No available seats for this event");
@@ -88,24 +78,16 @@ public class BookingService(
             BookingSemaphore.Release();
         }
 
-        return bookingRepository.CreateAsync(eventId);
+        return await bookingRepository.CreateAsync(eventId);
     }
 
-    public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
+    public async Task<Booking> GetByIdAsync(Guid bookingId)
     {
-        var booking = await db.Bookings.FindAsync(bookingId);
-
-        if (booking == null)
-        {
-            logger.LogError("Booking not found");
-            throw new BookingNotFoundException("Booking not found");
-        }
-
-        return booking;
+        return await bookingRepository.GetByIdAsync(bookingId);
     }
 
-    public IEnumerable<Booking> GetBookings()
+    public IQueryable<Booking> GetAll()
     {
-        return db.Bookings.ToList();
+        return bookingRepository.GetAll();
     }
 }

@@ -2,18 +2,24 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using WebProject.DataAccess;
 using WebProject.Middleware;
+using WebProject.Repositories;
 using WebProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+
 builder.Services.AddScoped<IEventCoordinationService, EventCoordinationService>();
 builder.Services.AddHostedService<BookingBackgroundService>();
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
