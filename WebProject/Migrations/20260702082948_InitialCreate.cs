@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebProject.Migrations
 {
     /// <inheritdoc />
-    public partial class AddAvailableSeats : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,7 +21,7 @@ namespace WebProject.Migrations
                     StartAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     TotalSeats = table.Column<int>(type: "integer", nullable: false),
-                    AvailableSeats = table.Column<int>(type: "integer", nullable: false, defaultValue: 0)
+                    AvailableSeats = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {

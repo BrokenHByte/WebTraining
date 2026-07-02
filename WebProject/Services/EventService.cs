@@ -18,7 +18,7 @@ public interface IEventService
 }
 
 // Синглтоновский сервис
-public class EventService(ILogger<EventService> logger, IEventRepository eventRepository) : IEventService
+public class EventService(IEventRepository eventRepository) : IEventService
 {
     public Task<Event> GetEventByIdAsync(Guid id)
     {

@@ -11,6 +11,7 @@ public interface IBookingRepository
     Task<Booking> GetByIdAsync(Guid bookingId);
     IQueryable<Booking> GetAll();
     IQueryable<Booking> GetPending();
+    IQueryable<Booking> GetBookingsByEventAsync(Guid eventId);
     Task Update(Guid bookingId, Booking data);
     Task DeleteById(Guid bookingId);
 }
@@ -85,5 +86,10 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
 
         db.Bookings.Remove(oneBooking);
         await db.SaveChangesAsync();
+    }
+
+    public IQueryable<Booking> GetBookingsByEventAsync(Guid eventId)
+    {
+        return db.Bookings.Where(x => x.EventId == eventId);
     }
 }

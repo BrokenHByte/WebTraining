@@ -12,8 +12,8 @@ using WebProject.DataAccess;
 namespace WebProject.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260625033106_AddAvailableSeats")]
-    partial class AddAvailableSeats
+    [Migration("20260702082948_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,10 +55,7 @@ namespace WebProject.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("AvailableSeats")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("AvailableSeats");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)

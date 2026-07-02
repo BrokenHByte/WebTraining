@@ -10,6 +10,7 @@ public interface IBookingService
     Task<Booking> GetByIdAsync(Guid bookingId);
     IQueryable<Booking> GetAll();
     IQueryable<Booking> GetPending();
+    IQueryable<Booking> GetBookingsByEventAsync(Guid eventId);
     Task Update(Guid bookingId, Booking data);
     Task DeleteById(Guid bookingId);
 }
@@ -25,6 +26,11 @@ public class BookingService(
     public IQueryable<Booking> GetPending()
     {
         return bookingRepository.GetPending();
+    }
+
+    public IQueryable<Booking> GetBookingsByEventAsync(Guid eventId)
+    {
+        return bookingRepository.GetBookingsByEventAsync(eventId);
     }
 
     public async Task Update(Guid bookingId, Booking data)

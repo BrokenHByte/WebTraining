@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebProject.DTOs;
 using WebProject.DTOs.Response;
 using WebProject.Models;
@@ -10,7 +11,6 @@ namespace WebProject.Controllers;
 [Route("[controller]")]
 public class EventsController(
     IEventService eventService,
-    IEventCoordinationService eventCoordinationService,
     IBookingService bookingService) : ControllerBase
 {
     private readonly int _defaultPage = 1;
@@ -24,9 +24,9 @@ public class EventsController(
         int pageNumber = page ?? _defaultPage;
         int validPageSize = pageSize ?? _defaultSizePage;
 
-        var events = (await eventService.GetEventsAsync(title, from, to)).ToList();
-
-        var pageEvents = await eventService.GetPageAsync(events, pageNumber, validPageSize);
+        var events = eventService.GetEvents(title, from, to);
+        int countEvents = await events.CountAsync();
+        var pageEvents = await eventService.Pagination(events, pageNumber, validPageSize).ToListAsync();
         var eventsDto = pageEvents.Select(o => new EventResponseDto
         {
             Id = o.Id,
@@ -40,7 +40,7 @@ public class EventsController(
 
         var eventsPaginated = new EventPaginatedResponseDto
         {
-            TotalCountEvents = events.Count,
+            TotalCountEvents = countEvents,
             CurrentPage = pageNumber,
             PageSize = eventsDto.Count,
             Events = eventsDto
@@ -91,7 +91,7 @@ public class EventsController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var booking = await bookingService.CreateBookingAsync(id);
+        var booking = await bookingService.CreateAsync(id);
         var response = new BookingCreateResponseDto { Id = booking.Id, EventId = id, Status = booking.Status };
         Response.Headers.Location = $"/bookings/{booking.Id}";
         return Accepted(response);
@@ -120,7 +120,7 @@ public class EventsController(
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEventAsync(Guid id)
     {
-        await eventCoordinationService.DeleteEventWithCheck(id);
+        await eventService.DeleteEventByIdAsync(id);
         return Ok();
     }
 }
