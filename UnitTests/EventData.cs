@@ -10,27 +10,58 @@ public class EventData
     public static TimeSpan OffsetLong = TimeSpan.FromHours(2);
 
     // Данные для проверки вставки
-    public static IEnumerable<(Event, string)> AddTestData()
+    public static List<Event> AddTestData()
     {
         return
         [
-            (new Event { Title = "Title1", Description = "Test1", StartAt = dateExample + OffsetShort, EndAt = dateExample },
-                messageInvalid),
-            (new Event { Title = "Title2", Description = "Test2", StartAt = dateExample, EndAt = dateExample + OffsetShort },
-                ""),
-            (new Event { Title = "Title3", Description = null, StartAt = dateExample, EndAt = dateExample },
-                messageInvalid),
-            (new Event { Title = "Title4", Description = "Test4", StartAt = dateExample, EndAt = dateExample + OffsetShort },
-                ""),
-            (new Event { Title = "", Description = "Test5", StartAt = dateExample, EndAt = dateExample + OffsetLong },
-                ""),
-            (new Event { Title = "Title6", Description = "Test6", StartAt = dateExample + OffsetShort, EndAt = dateExample + OffsetLong },
-                "")
+            new Event
+            {
+                Id = Guid.NewGuid(), Title = "Title1", Description = "Test1", StartAt = dateExample + OffsetShort,
+                EndAt = dateExample
+            },
+
+            new Event
+            {
+                Id = Guid.NewGuid(), Title = "Title2", Description = "Test2", StartAt = dateExample,
+                EndAt = dateExample + OffsetShort
+            },
+
+            new Event
+            {
+                Id = Guid.NewGuid(), Title = "Title3", Description = null, StartAt = dateExample, EndAt = dateExample
+            },
+
+            new Event
+            {
+                Id = Guid.NewGuid(), Title = "Title4", Description = "Test4", StartAt = dateExample,
+                EndAt = dateExample + OffsetShort
+            },
+
+            new Event
+            {
+                Id = Guid.NewGuid(), Title = "", Description = "Test5", StartAt = dateExample,
+                EndAt = dateExample + OffsetLong
+            },
+
+            new Event
+            {
+                Id = Guid.NewGuid(), Title = "Title6", Description = "Test6", StartAt = dateExample + OffsetShort,
+                EndAt = dateExample + OffsetLong
+            }
         ];
     }
 
+    public static List<string> AddTestResult()
+    {
+        return
+        [
+            messageInvalid, "", messageInvalid, "", "", ""
+        ];
+    }
+
+
     // Произвольный набор валидных данных
-    public static IEnumerable<Event> ExpectedTestData()
+    public static List<Event> ExpectedTestData()
     {
         return
         [
@@ -52,7 +83,7 @@ public class EventData
     }
 
     // Обновление для ExpectedTestData набора
-    public static IEnumerable<(Event, string)> UpdateTestData()
+    public static List<(Event, string)> UpdateTestData()
     {
         return
         [
@@ -67,7 +98,7 @@ public class EventData
         ];
     }
 
-    public static IEnumerable<(int, string)> TestDeleteData()
+    public static List<(int, string)> TestDeleteData()
     {
         return
         [
@@ -79,13 +110,19 @@ public class EventData
     }
 
     // Набор для теста постраничного получения данных
-    public static IEnumerable<Event> ExpectedPageTestData()
+    public static List<Event> ExpectedPageTestData()
     {
-        for (var i = 0; i < 100; i++)
-            yield return new Event
+        var result = new List<Event>();
+
+        for (int i = 0; i < 100; i++)
+        {
+            result.Add(new Event
             {
                 Title = $"Title{i + 1}", Description = $"Test{i + 1}", StartAt = dateExample,
                 EndAt = dateExample + OffsetShort
-            };
+            });
+        }
+
+        return result;
     }
 }

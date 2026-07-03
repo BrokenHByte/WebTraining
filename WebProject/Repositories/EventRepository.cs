@@ -37,7 +37,6 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
     public async Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt,
         int totalSeats)
     {
-        ValidateDateEvent(startAt, endAt);
         var newId = Guid.NewGuid();
         await db.Events.AddAsync(new Event
         {
@@ -56,7 +55,6 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
 
     public async Task UpdateEventAsync(Guid id, Event data)
     {
-        ValidateDateEvent(data.StartAt, data.EndAt);
         var eventEntity = await db.Events.FindAsync(id);
 
         if (eventEntity != null)
@@ -132,14 +130,5 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
                 (to == null || x.EndAt <= to) &&
                 (title == null || x.Title.ToLower().Contains(title.ToLower())))
             .Select(x => x);
-    }
-
-    private void ValidateDateEvent(DateTime startAt, DateTime endAt)
-    {
-        if (endAt <= startAt)
-        {
-            logger.LogError("Event is invalid: EndAt <= StartAt");
-            throw new EventValidationException("Event with id is invalid: EndAt <= StartAt");
-        }
     }
 }

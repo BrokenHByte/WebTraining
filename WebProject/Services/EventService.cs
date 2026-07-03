@@ -1,3 +1,4 @@
+using WebProject.Exceptions;
 using WebProject.Models;
 using WebProject.Repositories;
 
@@ -18,7 +19,7 @@ public interface IEventService
 }
 
 // Синглтоновский сервис
-public class EventService(IEventRepository eventRepository) : IEventService
+public class EventService(IEventRepository eventRepository, ILogger<EventService> logger) : IEventService
 {
     public Task<Event> GetEventByIdAsync(Guid id)
     {
@@ -32,11 +33,13 @@ public class EventService(IEventRepository eventRepository) : IEventService
 
     public Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
     {
+        ValidateDateEvent(startAt, endAt);
         return eventRepository.AddEventAsync(title, description, startAt, endAt, totalSeats);
     }
 
     public Task UpdateEventAsync(Guid id, Event data)
     {
+        ValidateDateEvent(data.StartAt, data.EndAt);
         return eventRepository.UpdateEventAsync(id, data);
     }
 
@@ -54,5 +57,14 @@ public class EventService(IEventRepository eventRepository) : IEventService
     public IQueryable<Event> Pagination(IQueryable<Event> events, int page, int pageSize)
     {
         return eventRepository.Pagination(events, page, pageSize);
+    }
+
+    private void ValidateDateEvent(DateTime startAt, DateTime endAt)
+    {
+        if (endAt <= startAt)
+        {
+            logger.LogError("Event is invalid: EndAt <= StartAt");
+            throw new EventValidationException("Event with id is invalid: EndAt <= StartAt");
+        }
     }
 }
