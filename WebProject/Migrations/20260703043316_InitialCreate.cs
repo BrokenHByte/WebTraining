@@ -26,7 +26,7 @@ namespace WebProject.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_events", x => x.id);
-                    table.CheckConstraint("CK_TotalSeats_GreaterThanZero", "[TotalSeats] > 0");
+                    table.CheckConstraint("CK_TotalSeats_GreaterThanZero", "total_seats > 0");
                 });
 
             migrationBuilder.CreateTable(

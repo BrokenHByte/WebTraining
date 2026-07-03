@@ -8,7 +8,7 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
 {
     public void Configure(EntityTypeBuilder<Event> builder)
     {
-        builder.ToTable(t => t.HasCheckConstraint("CK_TotalSeats_GreaterThanZero", "[TotalSeats] > 0"));
+        builder.ToTable(t => t.HasCheckConstraint("CK_TotalSeats_GreaterThanZero", "total_seats > 0"));
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();

@@ -66,13 +66,25 @@ public class TestEventRepository : IAsyncLifetime
             new(
                 new Event
                 {
-                    Title = "",
-                    Description = "",
+                    Title = "1",
+                    Description = "2",
+                    StartAt = DateTime.UtcNow,
+                    EndAt = DateTime.UtcNow.AddHours(-1),
+                    TotalSeats = 0
+                },
+                true,
+                typeof(DbUpdateException)),
+            new(
+                new Event
+                {
+                    Title = "1",
+                    Description = "2",
                     StartAt = DateTime.UtcNow,
                     EndAt = DateTime.UtcNow.AddHours(-1),
                     TotalSeats = -1
                 },
-                false) // Логика валидации вынесена в сервис
+                true,
+                typeof(DbUpdateException))
         };
     }
 
