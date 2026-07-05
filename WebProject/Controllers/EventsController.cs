@@ -24,7 +24,7 @@ public class EventsController(
         int pageNumber = page ?? _defaultPage;
         int validPageSize = pageSize ?? _defaultSizePage;
 
-        var events = eventService.GetEvents(title, from, to);
+        var events = eventService.GetWithFilter(title, from, to);
         int countEvents = await events.CountAsync();
         var pageEvents = await eventService.Pagination(events, pageNumber, validPageSize).ToListAsync();
         var eventsDto = pageEvents.Select(o => new EventResponseDto
@@ -52,7 +52,7 @@ public class EventsController(
     [HttpGet("{id}")]
     public async Task<IActionResult> GetByIdAsync(Guid id)
     {
-        var oneEvent = await eventService.GetEventByIdAsync(id);
+        var oneEvent = await eventService.GetByIdAsync(id);
 
         var eventsDto = new EventResponseDto
         {
@@ -74,7 +74,7 @@ public class EventsController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        await eventService.AddEventAsync(
+        await eventService.CreateAsync(
             data.Title,
             data.Description,
             data.StartAt,
@@ -113,14 +113,14 @@ public class EventsController(
             TotalSeats = data.TotalSeats
         };
 
-        await eventService.UpdateEventAsync(id, oneEvent);
+        await eventService.UpdateAsync(id, oneEvent);
         return Ok();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEventAsync(Guid id)
     {
-        await eventService.DeleteEventByIdAsync(id);
+        await eventService.DeleteByIdAsync(id);
         return Ok();
     }
 }

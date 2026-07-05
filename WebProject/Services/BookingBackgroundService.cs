@@ -49,12 +49,12 @@ public class BookingBackgroundService(
         try
         {
             await _processingSemaphore.WaitAsync(stoppingToken);
-            existedEvent = await eventService.GetEventByIdAsync(cloneBooking.EventId);
-            await bookingService.Update(booking.Id, cloneBooking.Confirm());
+            existedEvent = await eventService.GetByIdAsync(cloneBooking.EventId);
+            await bookingService.UpdateAsync(booking.Id, cloneBooking.Confirm());
         }
         catch (EventNotFoundException)
         {
-            await bookingService.Update(booking.Id, cloneBooking.Reject());
+            await bookingService.UpdateAsync(booking.Id, cloneBooking.Reject());
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. Event not found");
         }
         catch (OperationCanceledException)
@@ -63,7 +63,7 @@ public class BookingBackgroundService(
         }
         catch (Exception)
         {
-            await bookingService.Update(booking.Id, cloneBooking.Reject());
+            await bookingService.UpdateAsync(booking.Id, cloneBooking.Reject());
             if (existedEvent != null) existedEvent.ReleaseSeats();
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. ");
         }

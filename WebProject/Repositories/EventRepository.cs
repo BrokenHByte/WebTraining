@@ -7,19 +7,19 @@ namespace WebProject.Repositories;
 
 public interface IEventRepository
 {
-    IQueryable<Event> GetEvents(string? title = null, DateTime? from = null, DateTime? to = null);
+    IQueryable<Event> GetWithFilter(string? title = null, DateTime? from = null, DateTime? to = null);
     IQueryable<Event> Pagination(IQueryable<Event> events, int page, int pageSize);
-    Task<Event> GetEventByIdAsync(Guid id);
+    Task<Event> GetByIdAsync(Guid id);
     Task<bool> ContainsByIdAsync(Guid id);
 
-    Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats);
-    Task UpdateEventAsync(Guid id, Event data);
-    Task DeleteEventByIdAsync(Guid id);
+    Task<Guid> CreateAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats);
+    Task UpdateAsync(Guid id, Event data);
+    Task DeleteByIdAsync(Guid id);
 }
 
 public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) : IEventRepository
 {
-    public async Task<Event> GetEventByIdAsync(Guid id)
+    public async Task<Event> GetByIdAsync(Guid id)
     {
         var eventOne = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
         if (eventOne != null)
@@ -34,7 +34,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
         return await db.Events.AnyAsync(x => x.Id == id);
     }
 
-    public async Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt,
+    public async Task<Guid> CreateAsync(string title, string? description, DateTime startAt, DateTime endAt,
         int totalSeats)
     {
         var newId = Guid.NewGuid();
@@ -53,7 +53,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
         return newId;
     }
 
-    public async Task UpdateEventAsync(Guid id, Event data)
+    public async Task UpdateAsync(Guid id, Event data)
     {
         var eventEntity = await db.Events.FindAsync(id);
 
@@ -64,15 +64,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
             eventEntity.StartAt = data.StartAt;
             eventEntity.EndAt = data.EndAt;
 
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch
-            {
-                throw new InvalidOperationException();
-            }
-
+            await db.SaveChangesAsync();
             return;
         }
 
@@ -80,7 +72,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
         throw new EventNotFoundException("Event not found");
     }
 
-    public async Task DeleteEventByIdAsync(Guid id)
+    public async Task DeleteByIdAsync(Guid id)
     {
         var oneEvent = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
 
@@ -113,7 +105,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
             .Take(pageSize);
     }
 
-    public IQueryable<Event> GetEvents(string? title = null, DateTime? from = null,
+    public IQueryable<Event> GetWithFilter(string? title = null, DateTime? from = null,
         DateTime? to = null)
     {
         // Сработает только в postgres

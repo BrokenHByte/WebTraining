@@ -6,13 +6,14 @@ namespace WebProject.Services;
 
 public interface IBookingService
 {
-    Task<Booking> CreateAsync(Guid eventId);
     Task<Booking> GetByIdAsync(Guid bookingId);
     IQueryable<Booking> GetAll();
     IQueryable<Booking> GetPending();
-    IQueryable<Booking> GetBookingsByEventAsync(Guid eventId);
-    Task Update(Guid bookingId, Booking data);
-    Task DeleteById(Guid bookingId);
+    IQueryable<Booking> GetBookingsByEvent(Guid eventId);
+
+    Task<Booking> CreateAsync(Guid eventId);
+    Task UpdateAsync(Guid bookingId, Booking data);
+    Task DeleteByIdAsync(Guid bookingId);
 }
 
 public class BookingService(
@@ -28,18 +29,16 @@ public class BookingService(
         return bookingRepository.GetPending();
     }
 
-    public IQueryable<Booking> GetBookingsByEventAsync(Guid eventId)
+    public IQueryable<Booking> GetBookingsByEvent(Guid eventId)
     {
-        return bookingRepository.GetBookingsByEventAsync(eventId);
+        return bookingRepository.GetBookingsByEvent(eventId);
     }
 
-    public async Task Update(Guid bookingId, Booking data)
+    public async Task UpdateAsync(Guid bookingId, Booking data)
     {
-        await bookingRepository.Update(bookingId, data);
+        await bookingRepository.UpdateAsync(bookingId, data);
         var bookingEntity = await bookingRepository.GetByIdAsync(bookingId);
-        // По идее мжно напрямую менять bookingEntity, но это сразу погружение в контекст.
-        // По этому через копию
-        await bookingRepository.Update(bookingId, new Booking
+        await bookingRepository.UpdateAsync(bookingId, new Booking
         {
             Id = bookingEntity.Id,
             EventId = bookingEntity.EventId,
@@ -49,17 +48,17 @@ public class BookingService(
         });
     }
 
-    public async Task DeleteById(Guid bookingId)
+    public async Task DeleteByIdAsync(Guid bookingId)
     {
         var bookingEntity = await bookingRepository.GetByIdAsync(bookingId);
         var eventId = bookingEntity.EventId;
-        await bookingRepository.DeleteById(bookingId);
+        await bookingRepository.DeleteByIdAsync(bookingId);
 
         await BookingSemaphore.WaitAsync();
 
         try
         {
-            var eventOne = await eventService.GetEventByIdAsync(eventId);
+            var eventOne = await eventService.GetByIdAsync(eventId);
             eventOne.ReleaseSeats();
         }
         finally
@@ -74,7 +73,7 @@ public class BookingService(
 
         try
         {
-            var eventOne = await eventService.GetEventByIdAsync(eventId);
+            var eventOne = await eventService.GetByIdAsync(eventId);
 
             if (!eventOne.TryReserveSeats())
                 throw new NoAvailableSeatsException("No available seats for this event");

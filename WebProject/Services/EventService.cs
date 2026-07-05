@@ -7,23 +7,23 @@ namespace WebProject.Services;
 public interface IEventService
 {
     // READ
-    IQueryable<Event> GetEvents(string? title = null, DateTime? from = null, DateTime? to = null);
+    IQueryable<Event> GetWithFilter(string? title = null, DateTime? from = null, DateTime? to = null);
     IQueryable<Event> Pagination(IQueryable<Event> events, int page, int pageSize);
-    Task<Event> GetEventByIdAsync(Guid id);
+    Task<Event> GetByIdAsync(Guid id);
     Task<bool> ContainsByIdAsync(Guid id);
 
     // WRITE
-    Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats);
-    Task UpdateEventAsync(Guid id, Event data);
-    Task DeleteEventByIdAsync(Guid id);
+    Task<Guid> CreateAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats);
+    Task UpdateAsync(Guid id, Event data);
+    Task DeleteByIdAsync(Guid id);
 }
 
 // Синглтоновский сервис
 public class EventService(IEventRepository eventRepository, ILogger<EventService> logger) : IEventService
 {
-    public Task<Event> GetEventByIdAsync(Guid id)
+    public Task<Event> GetByIdAsync(Guid id)
     {
-        return eventRepository.GetEventByIdAsync(id);
+        return eventRepository.GetByIdAsync(id);
     }
 
     public Task<bool> ContainsByIdAsync(Guid id)
@@ -31,27 +31,28 @@ public class EventService(IEventRepository eventRepository, ILogger<EventService
         return eventRepository.ContainsByIdAsync(id);
     }
 
-    public Task<Guid> AddEventAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
+    public Task<Guid> CreateAsync(string title, string? description, DateTime startAt, DateTime endAt,
+        int totalSeats)
     {
         ValidateDateEvent(startAt, endAt);
-        return eventRepository.AddEventAsync(title, description, startAt, endAt, totalSeats);
+        return eventRepository.CreateAsync(title, description, startAt, endAt, totalSeats);
     }
 
-    public Task UpdateEventAsync(Guid id, Event data)
+    public Task UpdateAsync(Guid id, Event data)
     {
         ValidateDateEvent(data.StartAt, data.EndAt);
-        return eventRepository.UpdateEventAsync(id, data);
+        return eventRepository.UpdateAsync(id, data);
     }
 
-    public Task DeleteEventByIdAsync(Guid id)
+    public Task DeleteByIdAsync(Guid id)
     {
-        return eventRepository.DeleteEventByIdAsync(id);
+        return eventRepository.DeleteByIdAsync(id);
     }
 
-    public IQueryable<Event> GetEvents(string? title = null, DateTime? from = null,
+    public IQueryable<Event> GetWithFilter(string? title = null, DateTime? from = null,
         DateTime? to = null)
     {
-        return eventRepository.GetEvents(title, from, to);
+        return eventRepository.GetWithFilter(title, from, to);
     }
 
     public IQueryable<Event> Pagination(IQueryable<Event> events, int page, int pageSize)

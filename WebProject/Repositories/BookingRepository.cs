@@ -7,13 +7,14 @@ namespace WebProject.Repositories;
 
 public interface IBookingRepository
 {
-    Task<Booking> CreateAsync(Guid eventId);
     Task<Booking> GetByIdAsync(Guid bookingId);
     IQueryable<Booking> GetAll();
     IQueryable<Booking> GetPending();
-    IQueryable<Booking> GetBookingsByEventAsync(Guid eventId);
-    Task Update(Guid bookingId, Booking data);
-    Task DeleteById(Guid bookingId);
+    IQueryable<Booking> GetBookingsByEvent(Guid eventId);
+
+    Task<Booking> CreateAsync(Guid eventId);
+    Task UpdateAsync(Guid bookingId, Booking data);
+    Task DeleteByIdAsync(Guid bookingId);
 }
 
 public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db)
@@ -58,7 +59,7 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
         return db.Bookings.Where(x => x.Status == Booking.BookingStatus.Pending);
     }
 
-    public async Task Update(Guid bookingId, Booking data)
+    public async Task UpdateAsync(Guid bookingId, Booking data)
     {
         var bookingEntity = await db.Bookings.FindAsync(bookingId);
 
@@ -74,7 +75,7 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
         throw new BookingNotFoundException($"Booking {bookingId} not found");
     }
 
-    public async Task DeleteById(Guid bookingId)
+    public async Task DeleteByIdAsync(Guid bookingId)
     {
         var oneBooking = await db.Bookings.Where(x => x.Id == bookingId).FirstOrDefaultAsync();
 
@@ -88,7 +89,7 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
         await db.SaveChangesAsync();
     }
 
-    public IQueryable<Booking> GetBookingsByEventAsync(Guid eventId)
+    public IQueryable<Booking> GetBookingsByEvent(Guid eventId)
     {
         return db.Bookings.Where(x => x.EventId == eventId);
     }
