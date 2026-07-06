@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Testcontainers.PostgreSql;
-using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Models;
 using WebProject.Repositories;
@@ -15,39 +13,9 @@ public record EventTestData(
     Type? ExpectedExceptionType = null
 );
 
-public class TestEventRepository : IAsyncLifetime
+[Collection("Postgres Collection")]
+public class TestEventRepository(PostgresFixture fixture)
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
-
-    public async Task InitializeAsync()
-    {
-        await _postgres.StartAsync();
-        var context = CreateContext();
-        await context.Database.EnsureCreatedAsync();
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _postgres.DisposeAsync();
-    }
-
-    private AppDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_postgres.GetConnectionString()).UseSnakeCaseNamingConvention()
-            .Options;
-
-        return new AppDbContext(options);
-    }
-
-    private async Task ResetDatabaseAsync()
-    {
-        await using var context = CreateContext();
-        await context.Database.ExecuteSqlRawAsync(
-            "TRUNCATE TABLE bookings, events RESTART IDENTITY CASCADE");
-    }
-
-
     public static TheoryData<EventTestData> CreateEventTestCases()
     {
         return new TheoryData<EventTestData>
@@ -92,8 +60,8 @@ public class TestEventRepository : IAsyncLifetime
     [MemberData(nameof(CreateEventTestCases))]
     public async Task CreateEventTest(EventTestData testData)
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
         var data = testData.Input;
@@ -109,7 +77,7 @@ public class TestEventRepository : IAsyncLifetime
             await repo.CreateAsync(data.Title, data.Description, data.StartAt, data.EndAt,
                 data.TotalSeats);
 
-            await using var contextControl = CreateContext();
+            await using var contextControl = fixture.CreateContext();
             var repoControl = new EventRepository(mockLogger.Object, contextControl);
             var rows = await repoControl.GetWithFilter().ToListAsync();
             Assert.Single(rows);
@@ -124,8 +92,8 @@ public class TestEventRepository : IAsyncLifetime
     [Fact]
     public async Task UpdateEventTest()
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
         var guid = await repo.CreateAsync("Test", "Test", DateTime.UtcNow, DateTime.UtcNow.AddDays(1),
@@ -140,16 +108,16 @@ public class TestEventRepository : IAsyncLifetime
             TotalSeats = 10
         };
 
-        await using var contextControl = CreateContext();
+        await using var contextControl = fixture.CreateContext();
         var repoControl = new EventRepository(mockLogger.Object, contextControl);
         await Assert.ThrowsAsync<EventNotFoundException>(async () =>
             await repoControl.UpdateAsync(Guid.NewGuid(), newData));
 
-        await using var contextControl2 = CreateContext();
+        await using var contextControl2 = fixture.CreateContext();
         var repoControl2 = new EventRepository(mockLogger.Object, contextControl2);
         await repoControl2.UpdateAsync(guid, newData);
 
-        await using var contextControl3 = CreateContext();
+        await using var contextControl3 = fixture.CreateContext();
         var repoControl3 = new EventRepository(mockLogger.Object, contextControl3);
         var updateEvent = await repoControl2.GetByIdAsync(guid);
 
@@ -163,18 +131,18 @@ public class TestEventRepository : IAsyncLifetime
     [Fact]
     public async Task DeleteEventTest()
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
         var guid = await repo.CreateAsync("Test", "Test", DateTime.UtcNow, DateTime.UtcNow.AddDays(1),
             10);
 
-        await using var contextControl = CreateContext();
+        await using var contextControl = fixture.CreateContext();
         var repoControl = new EventRepository(mockLogger.Object, contextControl);
         await repoControl.DeleteByIdAsync(guid);
 
-        await using var contextControl2 = CreateContext();
+        await using var contextControl2 = fixture.CreateContext();
         var repoControl2 = new EventRepository(mockLogger.Object, contextControl2);
         await Assert.ThrowsAsync<EventNotFoundException>(async () => await repoControl2.DeleteByIdAsync(guid));
     }
@@ -182,38 +150,38 @@ public class TestEventRepository : IAsyncLifetime
     [Fact]
     public async Task GetEventByIdAsyncTest()
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
         var guid = await repo.CreateAsync("Test", "Test", DateTime.UtcNow, DateTime.UtcNow.AddDays(1),
             10);
 
-        await using var contextControl = CreateContext();
+        await using var contextControl = fixture.CreateContext();
         var repoControl = new EventRepository(mockLogger.Object, contextControl);
         var updateEvent = await repoControl.GetByIdAsync(guid);
 
-        await using var contextControl2 = CreateContext();
+        await using var contextControl2 = fixture.CreateContext();
         var repoControl2 = new EventRepository(mockLogger.Object, contextControl2);
         await Assert.ThrowsAsync<EventNotFoundException>(async () =>
-            await repoControl2.DeleteByIdAsync(Guid.NewGuid()));
+            await repoControl2.GetByIdAsync(Guid.NewGuid()));
     }
 
     [Fact]
     public async Task ContainsByIdAsyncTest()
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
         var guid = await repo.CreateAsync("Test", "Test", DateTime.UtcNow, DateTime.UtcNow.AddDays(1),
             10);
 
-        await using var contextControl = CreateContext();
+        await using var contextControl = fixture.CreateContext();
         var repoControl = new EventRepository(mockLogger.Object, contextControl);
         Assert.True(await repoControl.ContainsByIdAsync(guid));
 
-        await using var contextControl2 = CreateContext();
+        await using var contextControl2 = fixture.CreateContext();
         var repoControl2 = new EventRepository(mockLogger.Object, contextControl2);
         Assert.False(await repoControl2.ContainsByIdAsync(Guid.NewGuid()));
     }
@@ -221,8 +189,8 @@ public class TestEventRepository : IAsyncLifetime
     [Fact]
     public async Task GetEventsTest()
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
 
@@ -233,7 +201,7 @@ public class TestEventRepository : IAsyncLifetime
                 10);
         }
 
-        await using var context2 = CreateContext();
+        await using var context2 = fixture.CreateContext();
         var repo2 = new EventRepository(mockLogger.Object, context2);
         var rows = await repo2.GetWithFilter().ToListAsync();
         Assert.Equal(20, rows.Count);
@@ -263,8 +231,8 @@ public class TestEventRepository : IAsyncLifetime
     [Fact]
     public async Task PaginationTest()
     {
-        await ResetDatabaseAsync();
-        await using var context = CreateContext();
+        await fixture.ResetDatabaseAsync();
+        await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<EventRepository>>();
         var repo = new EventRepository(mockLogger.Object, context);
 
@@ -275,7 +243,7 @@ public class TestEventRepository : IAsyncLifetime
                 10);
         }
 
-        await using var context2 = CreateContext();
+        await using var context2 = fixture.CreateContext();
         var repo2 = new EventRepository(mockLogger.Object, context2);
         var query = repo2.GetWithFilter();
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>

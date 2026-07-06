@@ -2,9 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebProject", "WebProject/WebProject.csproj", "{6199C95F-F5CC-4433-ACBE-78734EC832B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{2FDF474D-BF56-4599-8AC8-76919EEFA255}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventApi.UnitTests", "EventApi.UnitTests\EventApi.UnitTests.csproj", "{2FDF474D-BF56-4599-8AC8-76919EEFA255}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{F41F316C-1361-47BB-B7C9-E1C270CFEF51}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventApi.IntegrationTests", "EventApi.IntegrationTests\EventApi.IntegrationTests.csproj", "{F41F316C-1361-47BB-B7C9-E1C270CFEF51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
