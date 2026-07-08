@@ -1,4 +1,3 @@
-using WebProject.DataAccess;
 using WebProject.Exceptions;
 using WebProject.Models;
 
@@ -16,6 +15,7 @@ public class BookingBackgroundService(
         while (!stoppingToken.IsCancellationRequested)
         {
             List<Booking> pendingBookings;
+
             using (var scope = scopeFactory.CreateScope())
             {
                 var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
@@ -23,6 +23,7 @@ public class BookingBackgroundService(
                 pendingBookings = bookingService.GetPending().ToList();
                 var tasks = pendingBookings.Select(booking =>
                     ProcessBookingAsync(eventService, bookingService, booking, stoppingToken));
+
                 await Task.WhenAll(tasks);
                 if (pendingBookings.Count > 0)
                     logger.LogInformation($"Booking {pendingBookings.Count} bookings updated.");
@@ -48,21 +49,21 @@ public class BookingBackgroundService(
         try
         {
             await _processingSemaphore.WaitAsync(stoppingToken);
-            existedEvent = await eventService.GetEventByIdAsync(cloneBooking.EventId); 
-            bookingService.UpdateBooking(booking.Id, cloneBooking.Confirm());
+            existedEvent = await eventService.GetByIdAsync(cloneBooking.EventId);
+            await bookingService.UpdateAsync(booking.Id, cloneBooking.Confirm());
         }
-        catch (EventNotFoundException ex)
+        catch (EventNotFoundException)
         {
-            bookingService.UpdateBooking(booking.Id, cloneBooking.Reject());
+            await bookingService.UpdateAsync(booking.Id, cloneBooking.Reject());
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. Event not found");
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
             // Остановка сервиса. Вероятно штатная ситуация
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            bookingService.UpdateBooking(booking.Id, cloneBooking.Reject());
+            await bookingService.UpdateAsync(booking.Id, cloneBooking.Reject());
             if (existedEvent != null) existedEvent.ReleaseSeats();
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. ");
         }
