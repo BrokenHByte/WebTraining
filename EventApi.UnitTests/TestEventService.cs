@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Domain.Entities;
+using Domain.Exceptions;
+using Infrastructure.Presentation.Repositories;
+using Infrastructure.Services;
+using Microsoft.Extensions.Logging;
 using Moq;
-using WebProject.Exceptions;
-using WebProject.Models;
-using WebProject.Repositories;
-using WebProject.Services;
 
 namespace UnitTests;
 

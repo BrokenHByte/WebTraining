@@ -1,4 +1,5 @@
-using WebProject.Models;
+
+using Domain.Entities;
 
 namespace Tests;
 

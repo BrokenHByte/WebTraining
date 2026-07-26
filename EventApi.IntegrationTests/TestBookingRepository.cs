@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Entities;
+using Domain.Exceptions;
+using Infrastructure.Presentation.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using WebProject.Exceptions;
-using WebProject.Models;
-using WebProject.Repositories;
+
 
 namespace IntegrationTests;
 
