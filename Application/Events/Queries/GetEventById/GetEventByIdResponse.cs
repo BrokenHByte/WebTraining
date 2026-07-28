@@ -1,9 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+namespace Application.Events.Queries.GetEventById;
 
-namespace Presentation.DTOs;
-
-// Копия Event, в валидации ответа смысла пока мало
-public class EventResponseDto
+public record GetEventByIdResponse
 {
     public Guid Id { get; set; }
     public required string Title { get; set; }

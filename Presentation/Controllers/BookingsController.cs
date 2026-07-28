@@ -1,26 +1,35 @@
-using Application.Bookings.DTOs;
-using Infrastructure.Services;
+using Application.Bookings.Commands.CreateBooking;
+using Application.Bookings.Queries.GetBookingById;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class BookingsController(IBookingService bookingService) : ControllerBase
+public class BookingsController(IMediator mediator) : ControllerBase
 {
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetByBookingId(Guid id)
+    
+    [HttpPost("{id}/book")]
+    public async Task<ActionResult<CreateBookingResponse>> CreateBookingAsync(Guid eventId)
     {
-        var booking = await bookingService.GetByIdAsync(id);
-        var bookingDto = new BookingGetResponseDto
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        CreateBookingResponse booking = await mediator.Send(new CreateBookingCommand()
         {
-            Id = booking.Id,
-            EventId = booking.EventId,
-            Status = booking.Status,
-            CreatedAt = booking.CreatedAt,
-            ProcessedAt = booking.ProcessedAt
-        };
-
-        return Ok(bookingDto);
+            EventId = eventId
+        });
+        Response.Headers.Location = $"/bookings/{booking.Id}";
+        return Accepted(booking);
+    }
+    
+    [HttpGet("{id}")]
+    public async Task<ActionResult<GetBookingByIdResponse>> GetByBookingId(Guid id)
+    {
+        var booking = await mediator.Send(new GetBookingByIdQuery()
+        {
+            Id = id
+        });
+        return Ok(booking);
     }
 }

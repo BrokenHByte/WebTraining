@@ -1,21 +1,11 @@
-﻿using Domain.Entities;
+﻿using Application.Abstractions.Persistence.Repositories;
+using Domain.Entities;
 using Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Presentation.Repositories;
 
-public interface IEventRepository
-{
-    IQueryable<Event> GetWithFilter(string? title = null, DateTime? from = null, DateTime? to = null);
-    IQueryable<Event> Pagination(IQueryable<Event> events, int page, int pageSize);
-    Task<Event> GetByIdAsync(Guid id);
-    Task<bool> ContainsByIdAsync(Guid id);
-
-    Task<Guid> CreateAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats);
-    Task UpdateAsync(Guid id, Event data);
-    Task DeleteByIdAsync(Guid id);
-}
 
 public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) : IEventRepository
 {

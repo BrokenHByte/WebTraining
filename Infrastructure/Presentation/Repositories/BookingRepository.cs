@@ -1,21 +1,10 @@
-﻿using Domain.Entities;
+﻿using Application.Abstractions.Persistence.Repositories;
+using Domain.Entities;
 using Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Presentation.Repositories;
-
-public interface IBookingRepository
-{
-    Task<Booking> GetByIdAsync(Guid bookingId);
-    IQueryable<Booking> GetAll();
-    IQueryable<Booking> GetPending();
-    IQueryable<Booking> GetBookingsByEvent(Guid eventId);
-
-    Task<Booking> CreateAsync(Guid eventId);
-    Task UpdateAsync(Guid bookingId, Booking data);
-    Task DeleteByIdAsync(Guid bookingId);
-}
 
 public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db)
     : IBookingRepository

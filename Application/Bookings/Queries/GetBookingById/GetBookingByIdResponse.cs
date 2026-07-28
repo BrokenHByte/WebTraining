@@ -1,8 +1,8 @@
-using Domain.Entities;
+﻿using Domain.Entities;
 
-namespace Application.Bookings.DTOs;
+namespace Application.Bookings.Queries.GetBookingById;
 
-public class BookingGetResponseDto
+public sealed record GetBookingByIdResponse
 {
     public Guid Id { get; init; }
     public Guid EventId { get; init; }

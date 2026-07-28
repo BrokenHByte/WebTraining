@@ -1,7 +1,6 @@
 using Domain.Entities;
 using Domain.Exceptions;
 using Infrastructure.Presentation.Repositories;
-using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 

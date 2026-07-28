@@ -1,8 +1,8 @@
-using Domain.Entities;
+﻿using Domain.Entities;
 
-namespace Application.Bookings.DTOs;
+namespace Application.Bookings.Commands.CreateBooking;
 
-public class BookingCreateResponseDto
+public sealed record CreateBookingResponse
 {
     public Guid Id { get; set; }
     public Guid EventId { get; set; }

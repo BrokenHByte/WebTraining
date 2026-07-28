@@ -1,10 +1,11 @@
+using Application.Abstractions.Persistence.Repositories;
 using Domain.Entities;
 using Domain.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Services;
+namespace Infrastructure.Background;
 
 public class BookingBackgroundService(
     IServiceScopeFactory scopeFactory,
@@ -21,8 +22,8 @@ public class BookingBackgroundService(
 
             using (var scope = scopeFactory.CreateScope())
             {
-                var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
-                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+                var eventService = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
                 pendingBookings = bookingService.GetPending().ToList();
                 var tasks = pendingBookings.Select(booking =>
                     ProcessBookingAsync(eventService, bookingService, booking, stoppingToken));
@@ -39,7 +40,7 @@ public class BookingBackgroundService(
         logger.LogInformation("Booking background service stopped");
     }
 
-    private async Task ProcessBookingAsync(IEventService eventService, IBookingService bookingService, Booking booking,
+    private async Task ProcessBookingAsync(IEventRepository eventService, IBookingRepository bookingService, Booking booking,
         CancellationToken stoppingToken)
     {
         await Task.Delay(2000, stoppingToken);
