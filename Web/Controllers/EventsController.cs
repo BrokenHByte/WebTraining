@@ -35,7 +35,7 @@ public class EventsController(
     }
 
     [HttpPost]
-    public async Task<ActionResult<Guid>> CreateEventAsync([FromBody] CreateEventCommand data)
+    public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);

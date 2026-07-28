@@ -1,12 +1,11 @@
 ﻿using Application.Abstractions.Persistence.Repositories;
 using Infrastructure.Background;
-using Infrastructure.Presentation;
 using Infrastructure.Presentation.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure;
+namespace Infrastructure.Presentation.Extensions;
 
 public static class DependencyInjection
 {

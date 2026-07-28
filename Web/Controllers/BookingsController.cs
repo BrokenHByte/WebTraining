@@ -10,7 +10,7 @@ namespace Presentation.Controllers;
 public class BookingsController(IMediator mediator) : ControllerBase
 {
     
-    [HttpPost("{id}/book")]
+    [HttpPost("{eventId}/book")]
     public async Task<ActionResult<CreateBookingResponse>> CreateBookingAsync(Guid eventId)
     {
         if (!ModelState.IsValid)

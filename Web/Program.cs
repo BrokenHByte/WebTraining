@@ -1,11 +1,6 @@
 using System.Text.Json.Serialization;
-using Application.Abstractions.Persistence.Repositories;
 using Application.Events.Commands.CreateEvent;
-using Infrastructure;
-using Infrastructure.Background;
-using Infrastructure.Presentation;
-using Infrastructure.Presentation.Repositories;
-using Microsoft.EntityFrameworkCore;
+using Infrastructure.Presentation.Extensions;
 using Presentation.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
