@@ -169,7 +169,7 @@ DELETE /events/{id}
 
 ------------------------
 ### Забронировать событие по id 
-POST /events/{id}/book
+POST /bookings/{id}/book
 
 **Пример ответа:**
 ```json
