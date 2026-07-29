@@ -1,22 +1,22 @@
-﻿using Application.Abstractions.Persistence.Repositories;
+﻿using Application.Abstractions.Persistence.Services;
 using Application.Events.Queries.GetEventById;
 using MediatR;
 
 namespace Application.Events.Queries.GetEventsPage;
 
-public class GetEventPageHandler(IEventRepository eventRepository) : IRequestHandler<GetEventPageQuery, GetEventPageResponse>
+public class GetEventPageHandler(IEventService eventService) : IRequestHandler<GetEventPageQuery, GetEventPageResponse>
 {    
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
 
     public async Task<GetEventPageResponse> Handle(GetEventPageQuery request, CancellationToken cancellationToken)
     {
-        var query = eventRepository.GetWithFilter(request.Title, request.From, request.To);
+        var query = eventService.GetWithFilter(request.Title, request.From, request.To);
         int countEvents = query.Count();
         int pageNumber = request.Page ?? _defaultPage;
         int validPageSize = request.PageSize ?? _defaultSizePage;
 
-        var page = eventRepository.Pagination(query, pageNumber, validPageSize).ToList();
+        var page = eventService.Pagination(query, pageNumber, validPageSize).ToList();
         var events = page.Select(o => new GetEventByIdResponse
         {
             Id = o.Id,

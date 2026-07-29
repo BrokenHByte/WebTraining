@@ -6,8 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Presentation.Repositories;
 
-public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db)
-    : IBookingRepository
+public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db) : IBookingRepository
 {
     public async Task<Booking> CreateAsync(Guid eventId)
     {

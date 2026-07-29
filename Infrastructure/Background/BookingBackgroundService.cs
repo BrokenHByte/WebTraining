@@ -1,4 +1,5 @@
 using Application.Abstractions.Persistence.Repositories;
+using Application.Abstractions.Persistence.Services;
 using Domain.Entities;
 using Domain.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +23,11 @@ public class BookingBackgroundService(
 
             using (var scope = scopeFactory.CreateScope())
             {
-                var eventService = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
-                pendingBookings = bookingService.GetPending().ToList();
+                var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+                var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                pendingBookings = bookingRepository.GetPending().ToList();
                 var tasks = pendingBookings.Select(booking =>
-                    ProcessBookingAsync(eventService, bookingService, booking, stoppingToken));
+                    ProcessBookingAsync(eventRepository, bookingRepository, booking, stoppingToken));
 
                 await Task.WhenAll(tasks);
                 if (pendingBookings.Count > 0)
@@ -40,12 +41,12 @@ public class BookingBackgroundService(
         logger.LogInformation("Booking background service stopped");
     }
 
-    private async Task ProcessBookingAsync(IEventRepository eventService, IBookingRepository bookingService, Booking booking,
+    private async Task ProcessBookingAsync(IEventRepository eventRepository, IBookingRepository bookingRepository, Booking booking,
         CancellationToken stoppingToken)
     {
         await Task.Delay(2000, stoppingToken);
         Event? existedEvent = null;
-        var cloneBooking = booking;
+        var cloneBooking = (Booking)booking.Clone();
 
         if (stoppingToken.IsCancellationRequested)
             return;
@@ -53,12 +54,12 @@ public class BookingBackgroundService(
         try
         {
             await _processingSemaphore.WaitAsync(stoppingToken);
-            existedEvent = await eventService.GetByIdAsync(cloneBooking.EventId);
-            await bookingService.UpdateAsync(booking.Id, cloneBooking.Confirm());
+            existedEvent = await eventRepository.GetByIdAsync(cloneBooking.EventId);
+            await bookingRepository.UpdateAsync(booking.Id, cloneBooking.Confirm());
         }
         catch (EventNotFoundException)
         {
-            await bookingService.UpdateAsync(booking.Id, cloneBooking.Reject());
+            await bookingRepository.UpdateAsync(booking.Id, cloneBooking.Reject());
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. Event not found");
         }
         catch (OperationCanceledException)
@@ -67,7 +68,7 @@ public class BookingBackgroundService(
         }
         catch (Exception)
         {
-            await bookingService.UpdateAsync(booking.Id, cloneBooking.Reject());
+            await bookingRepository.UpdateAsync(booking.Id, cloneBooking.Reject());
             if (existedEvent != null) existedEvent.ReleaseSeats();
             logger.LogWarning($"Booking {cloneBooking.EventId} rejected. ");
         }

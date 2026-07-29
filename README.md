@@ -1,5 +1,10 @@
 # Учебный проект
-Проект для практики навыков по созданию сервисов в фреймворке ASP.NET Core
+Проект для практики навыков по созданию сервисов в фреймворке ASP.NET Core  
+Архитектура проекта разделена на 4 слоя:  
+**Domain** - ядро системы. Определены классы бизнес-сущностей  
+**Application** - слой реализующий бизнес логику через сценарии взаимодействия пользователя с сервером  
+**Infrastructure** - слой хранит реализации интерфейсов взаимодействия с базой данных и другими внешними системами. Миграции баз данных и конфигурации для бизнес-сущностей в базе  
+**Web** - слой доступа к пользовательским сценариям через контроллеры  
 
 # Сборка и запуск
 1. Клонировать репозиторий с необходимой веткой
@@ -11,13 +16,13 @@
 `http://localhost:5008/swagger/index.html`
 
 - Юнит тесты проекта запускаются из папки проекта командой  
-**dotnet test UnitTests**
+**dotnet test Infrastructure.UnitTests**
 - Интеграционные тесты проекта запускаются из папки проекта командой  
-**dotnet test IntegrationTests**  
+**dotnet test Infrastructure.IntegrationTests**  
 Для запуска интеграционных тестов должен быть запущен сервис docker
 - Для поддержания актуального состояния базы данных используются миграции.  
 Новую миграцию можно создать и применить командами:  
-**dotnet ef migrations add "Название"**  
+**dotnet.exe ef migrations add --project Infrastructure\Infrastructure.csproj --startup-project Web\Web.csproj --context Infrastructure.Presentation.AppDbContext --configuration Debug НазваниеМиграции --output-dir Presentation\Migrations**   
 **dotnet ef database update**  
 - В качестве базы данных используется postgres-16
 

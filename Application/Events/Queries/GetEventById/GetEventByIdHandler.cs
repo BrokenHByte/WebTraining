@@ -1,15 +1,13 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Events.Commands.UpdateEvent;
-using Domain.Entities;
+﻿using Application.Abstractions.Persistence.Services;
 using MediatR;
 
 namespace Application.Events.Queries.GetEventById;
 
-public class GetEventByIdHandler(IEventRepository eventRepository) : IRequestHandler<GetEventByIdQuery, GetEventByIdResponse>
+public class GetEventByIdHandler(IEventService eventService) : IRequestHandler<GetEventByIdQuery, GetEventByIdResponse>
 {
     public async Task<GetEventByIdResponse> Handle(GetEventByIdQuery request, CancellationToken cancellationToken)
     {
-        var result = await eventRepository.GetByIdAsync(request.Id);
+        var result = await eventService.GetByIdAsync(request.Id);
         return new GetEventByIdResponse()
         {
             Id = result.Id,

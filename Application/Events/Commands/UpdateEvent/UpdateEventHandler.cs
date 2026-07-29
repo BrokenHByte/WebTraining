@@ -1,15 +1,14 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Events.Commands.CreateEvent;
+﻿using Application.Abstractions.Persistence.Services;
 using Domain.Entities;
 using MediatR;
 
 namespace Application.Events.Commands.UpdateEvent;
 
-public class UpdateEventHandler(IEventRepository eventRepository) : IRequestHandler<UpdateEventCommand>
+public class UpdateEventHandler(IEventService eventService) : IRequestHandler<UpdateEventCommand>
 {
     public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
-        await eventRepository.UpdateAsync(request.ExistingId, new Event()
+        await eventService.UpdateAsync(request.ExistingId, new Event()
         {
             Id = request.ExistingId,
             Title =  request.Title,
