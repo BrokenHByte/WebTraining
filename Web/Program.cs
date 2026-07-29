@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using Application.Events.Commands.CreateEvent;
-using Infrastructure.Presentation.Extensions;
+using Infrastructure.Data.Extensions;
 using Presentation.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);

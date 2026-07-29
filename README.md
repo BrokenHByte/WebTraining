@@ -11,18 +11,18 @@
 2. Запустить сервер базы данных в docker,  
 запустив из корня репозитория **docker compose up -d**  
 (При появлении ошибки, убедитесь что docker установлен и сервис запущен)
-3. Запустить из папки проекта команду dotnet run --project WebProject
+3. Запустить из папки проекта команду dotnet run --project Web
 4. Можно проверить по адресу
 `http://localhost:5008/swagger/index.html`
 
 - Юнит тесты проекта запускаются из папки проекта командой  
-**dotnet test Infrastructure.UnitTests**
+**dotnet test Application.UnitTests**
 - Интеграционные тесты проекта запускаются из папки проекта командой  
 **dotnet test Infrastructure.IntegrationTests**  
 Для запуска интеграционных тестов должен быть запущен сервис docker
 - Для поддержания актуального состояния базы данных используются миграции.  
 Новую миграцию можно создать и применить командами:  
-**dotnet.exe ef migrations add --project Infrastructure\Infrastructure.csproj --startup-project Web\Web.csproj --context Infrastructure.Presentation.AppDbContext --configuration Debug НазваниеМиграции --output-dir Presentation\Migrations**   
+**dotnet.exe ef migrations add --project Infrastructure\Infrastructure.csproj --startup-project Web\Web.csproj --context Infrastructure.Data.AppDbContext --configuration Debug НазваниеМиграции --output-dir Data\Migrations**   
 **dotnet ef database update**  
 - В качестве базы данных используется postgres-16
 

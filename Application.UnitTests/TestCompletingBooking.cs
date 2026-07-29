@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Persistence.Repositories;
+using Application.Bookings.Commands.CompletingBooking;
 using Domain.Entities;
 using Infrastructure.Background;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,23 +8,22 @@ using Moq;
 
 namespace Tests;
 
-public class BookingBackgroundServiceTests
+public class TestCompletingBooking
 {
     private readonly Mock<IBookingRepository> _bookingRepositoryMock;
 
     private readonly Guid _eventGuid1 = Guid.NewGuid();
     private readonly Guid _eventGuid2 = Guid.NewGuid();
     private readonly Mock<IEventRepository> _eventRepositoryMock;
-    private readonly BookingBackgroundService _service;
     private readonly List<Booking> _testBookings;
 
-    public BookingBackgroundServiceTests()
+    public TestCompletingBooking()
     {
         var scopeFactoryMock = new Mock<IServiceScopeFactory>();
         var scopeMock = new Mock<IServiceScope>();
         _eventRepositoryMock = new Mock<IEventRepository>();
         _bookingRepositoryMock = new Mock<IBookingRepository>();
-        var loggerMock = new Mock<ILogger<BookingBackgroundService>>();
+        var loggerMock = new Mock<ILogger<TestCompletingBookingBackgroundService>>();
 
         scopeFactoryMock.Setup(x => x.CreateScope()).Returns(scopeMock.Object);
         scopeMock.Setup(x => x.ServiceProvider.GetService(typeof(IEventRepository)))
@@ -36,10 +36,7 @@ public class BookingBackgroundServiceTests
         {
             new() { Id = Guid.NewGuid(), EventId = _eventGuid1, Status = Booking.BookingStatus.Pending }
         };
-
-        _service = new BookingBackgroundService(
-            scopeFactoryMock.Object,
-            loggerMock.Object);
+        
     }
 
     [Fact]
@@ -62,8 +59,13 @@ public class BookingBackgroundServiceTests
         {
             _testBookings[0].Status = Booking.BookingStatus.Confirmed;
         }).Returns(Task.CompletedTask);
-
-        await _service.StartAsync(cts.Token);
+        
+        var loggerMock = new Mock<ILogger<CompletingBookingHandler>>();
+        var handler = new CompletingBookingHandler(_eventRepositoryMock.Object, _bookingRepositoryMock.Object, loggerMock.Object);
+        var command = new CompletingBookingCommand();
+        
+        await handler.Handle(command, CancellationToken.None);
+        
         await Task.Delay(3000);
         cts.CancelAfter(100);
         Assert.Equal(Booking.BookingStatus.Confirmed, _testBookings[0].Status);

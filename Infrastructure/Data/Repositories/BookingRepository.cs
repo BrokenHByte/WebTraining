@@ -4,7 +4,7 @@ using Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Presentation.Repositories;
+namespace Infrastructure.Data.Repositories;
 
 public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db) : IBookingRepository
 {

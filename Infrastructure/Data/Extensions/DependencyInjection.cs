@@ -1,13 +1,11 @@
 ﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Abstractions.Persistence.Services;
 using Infrastructure.Background;
-using Infrastructure.Presentation.Repositories;
-using Infrastructure.Presentation.Services;
+using Infrastructure.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure.Presentation.Extensions;
+namespace Infrastructure.Data.Extensions;
 
 public static class DependencyInjection
 {
@@ -19,9 +17,7 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
-        services.AddScoped<IEventService, EventService>();
-        services.AddScoped<IBookingService, BookingService>();       
-        services.AddHostedService<BookingBackgroundService>();
+        services.AddHostedService<TestCompletingBookingBackgroundService>();
         
         return services;
     }
