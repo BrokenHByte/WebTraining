@@ -8,7 +8,12 @@ namespace Infrastructure.Data.Repositories;
 
 public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db) : IBookingRepository
 {
-    public async Task<Booking> CreateAsync(Guid eventId)
+    public IQueryable<Booking> GetBookingsByUser(Guid userId)
+    {
+        return db.Bookings.Where(x => x.UserId == userId);
+    }
+
+    public async Task<Booking> CreateAsync(Guid eventId, Guid userId)
     {
         var guid = Guid.NewGuid();
         var booking = await db.Bookings.AddAsync(new Booking
@@ -17,7 +22,8 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
             EventId = eventId,
             Status = Booking.BookingStatus.Pending,
             CreatedAt = DateTime.UtcNow,
-            ProcessedAt = null
+            ProcessedAt = null,
+            UserId = userId
         });
 
         await db.SaveChangesAsync();
@@ -77,6 +83,20 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
         await db.SaveChangesAsync();
     }
 
+    public async Task CancelledByIdAsync(Guid bookingId)
+    {
+        var oneBooking = await db.Bookings.Where(x => x.Id == bookingId && x.Status != Booking.BookingStatus.Cancelled).FirstOrDefaultAsync();
+
+        if (oneBooking == null)
+        {
+            logger.LogError($"Booking with id {bookingId} not found or booking cancelled");
+            throw new BookingNotFoundException($"Booking {bookingId} not found or booking cancelled");
+        }
+
+        oneBooking.Status  = Booking.BookingStatus.Cancelled;
+        await db.SaveChangesAsync();
+    }
+    
     public IQueryable<Booking> GetBookingsByEvent(Guid eventId)
     {
         return db.Bookings.Where(x => x.EventId == eventId);

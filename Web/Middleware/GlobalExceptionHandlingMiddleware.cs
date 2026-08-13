@@ -40,10 +40,14 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
         {
             return ex switch
             {
+                ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
+                BookingBeginEventException => StatusCodes.Status400BadRequest,
+                BookingExceedingLimitException => StatusCodes.Status409Conflict,
+                BookingNotFoundException => StatusCodes.Status404NotFound,
                 EventNotFoundException => StatusCodes.Status404NotFound,
                 EventValidationException => StatusCodes.Status400BadRequest,
-                BookingNotFoundException => StatusCodes.Status404NotFound,
-                ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
+                InsufficientExecutionStackException => StatusCodes.Status403Forbidden,
+                LoginAlreadyUseException => StatusCodes.Status409Conflict,
                 NoAvailableSeatsException => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };

@@ -11,7 +11,7 @@ namespace IntegrationTests;
 [Collection("Postgres Collection")]
 public class TestBookingRepository(PostgresFixture fixture)
 {
-    private async Task<List<Guid>> prepareDataEvent()
+    private async Task<(List<Guid>, Guid)> prepareDataEvent()
     {
         List<Guid> guids = [];
         await using var context = fixture.CreateContext();
@@ -25,25 +25,37 @@ public class TestBookingRepository(PostgresFixture fixture)
                 2));
         }
 
-        return guids;
+        var userId = Guid.NewGuid();
+        context.Users.Add(new User()
+        {
+            Id = userId,
+            Login = "TestLogin",
+            HashPass = "123",
+            Role = User.Roles.Admin
+        });
+        await context.SaveChangesAsync();
+        return (guids, userId);
     }
 
     [Fact]
     public async Task CreateBookingTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
         await Assert.ThrowsAsync<DbUpdateException>(async () =>
-            await repo.CreateAsync(Guid.NewGuid()));
+            await repo.CreateAsync(Guid.NewGuid(), userId));
 
         context.ChangeTracker.Clear();
 
-        var booking = await repo.CreateAsync(guids[0]);
+        var booking = await repo.CreateAsync(guids[0], userId);
 
         await using var contextControl = fixture.CreateContext();
         var repo2 = new BookingRepository(mockLogger.Object, contextControl);
@@ -54,13 +66,15 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task UpdateBookingTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
-        var booking = await repo.CreateAsync(guids[0]);
+        var booking = await repo.CreateAsync(guids[0], userId);
 
         var d = DateTime.UtcNow.AddDays(1);
         await using var contextUpdate = fixture.CreateContext();
@@ -90,13 +104,15 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task DeleteBookingTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
-        var booking = await repo.CreateAsync(guids[0]);
+        var booking = await repo.CreateAsync(guids[0], userId);
 
         await using var contextControl = fixture.CreateContext();
         var repo2 = new BookingRepository(mockLogger.Object, contextControl);
@@ -112,13 +128,15 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task GetBookingByIdAsyncTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
-        var booking = await repo.CreateAsync(guids[0]);
+        var booking = await repo.CreateAsync(guids[0], userId);
 
         await using var contextControl = fixture.CreateContext();
         var repoControl = new BookingRepository(mockLogger.Object, contextControl);
@@ -136,13 +154,15 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task GetBookingByEventAsyncTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
-        var booking = await repo.CreateAsync(guids[0]);
+        var booking = await repo.CreateAsync(guids[0], userId);
 
         await using var contextControl = fixture.CreateContext();
         var repoControl = new BookingRepository(mockLogger.Object, contextControl);
@@ -162,14 +182,16 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task GetAllTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
-        var booking = await repo.CreateAsync(guids[0]);
-        var booking2 = await repo.CreateAsync(guids[1]);
+        var booking = await repo.CreateAsync(guids[0], userId);
+        var booking2 = await repo.CreateAsync(guids[1], userId);
 
         await using var context2 = fixture.CreateContext();
         var repo2 = new BookingRepository(mockLogger.Object, context2);
@@ -181,14 +203,16 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task GetPendingTest()
     {
         await fixture.ResetDatabaseAsync();
-        var guids = await prepareDataEvent();
+        var data = await prepareDataEvent();
+        var guids = data.Item1;
+        var userId = data.Item2;
 
         await using var context = fixture.CreateContext();
         var mockLogger = new Mock<ILogger<BookingRepository>>();
         var repo = new BookingRepository(mockLogger.Object, context);
 
-        var booking = await repo.CreateAsync(guids[0]);
-        var booking2 = await repo.CreateAsync(guids[1]);
+        var booking = await repo.CreateAsync(guids[0], userId);
+        var booking2 = await repo.CreateAsync(guids[1], userId);
 
         await using var context2 = fixture.CreateContext();
         var repo2 = new BookingRepository(mockLogger.Object, context2);

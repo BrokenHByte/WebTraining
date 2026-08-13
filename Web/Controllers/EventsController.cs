@@ -4,6 +4,7 @@ using Application.Events.Commands.UpdateEvent;
 using Application.Events.Queries.GetEventById;
 using Application.Events.Queries.GetEventsPage;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers;
@@ -33,8 +34,9 @@ public class EventsController(
         var result = await mediator.Send(new GetEventByIdQuery(){ Id = id});
         return Ok(result);
     }
-
-    [HttpPost]
+    
+    [HttpPost]   
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)
     {
         if (!ModelState.IsValid)
@@ -45,6 +47,7 @@ public class EventsController(
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateEventAsync([FromBody] UpdateEventCommand data)
     {
         if (!ModelState.IsValid)
@@ -54,6 +57,7 @@ public class EventsController(
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteEventAsync([FromBody] DeleteEventCommand data)
     {
         if (!ModelState.IsValid)
