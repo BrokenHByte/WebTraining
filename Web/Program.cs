@@ -49,12 +49,12 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.Http,
         Scheme = JwtBearerDefaults.AuthenticationScheme,
     });
-    
+
     c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
     {
-        [ new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, doc)] = []
+        [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, doc)] = []
     });
-    
+
 });
 
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -74,7 +74,7 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
-app.UseAuthorization(); 
+app.UseAuthorization();
 
 await app.Services.ApplyMigrationsAsync();
 

@@ -10,7 +10,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
-        builder.HasIndex(x => x.Login).IsUnique(); 
+        builder.HasIndex(x => x.Login).IsUnique();
         builder.HasMany(b => b.Bookings)
             .WithOne(a => a.User)
             .HasForeignKey(b => b.UserId);

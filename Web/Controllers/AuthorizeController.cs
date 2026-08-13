@@ -17,16 +17,16 @@ public class AuthorizeController(IMediator mediator) : ControllerBase
 
         var result = await mediator.Send(data);
         return Ok(result);
-    } 
-    
+    }
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegistrationUserCommand data)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-        
+
         await mediator.Send(data);
         return NoContent();
-    } 
-    
+    }
+
 }

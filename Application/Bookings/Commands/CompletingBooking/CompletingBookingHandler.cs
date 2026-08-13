@@ -17,7 +17,7 @@ public class CompletingBookingHandler(IEventRepository eventRepository, IBooking
 
         if (stoppingToken.IsCancellationRequested)
             return;
-        
+
         await BookingLock.ExecuteAsync(async () =>
         {
             try
@@ -42,7 +42,7 @@ public class CompletingBookingHandler(IEventRepository eventRepository, IBooking
             }
         }, stoppingToken);
     }
-    
+
     public async Task Handle(CompletingBookingCommand request, CancellationToken cancellationToken)
     {
         var pendingBookings = bookingRepository.GetPending().ToList();

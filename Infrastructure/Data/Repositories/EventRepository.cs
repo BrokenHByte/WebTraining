@@ -47,6 +47,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
     {
         var eventEntity = await db.Events.FindAsync(id);
 
+        // Не меняет доступные места и оставшееся место. Спорный момент
         if (eventEntity != null)
         {
             eventEntity.Title = data.Title;
@@ -113,4 +114,5 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
                 (title == null || x.Title.ToLower().Contains(title.ToLower())))
             .Select(x => x);
     }
+
 }

@@ -46,9 +46,10 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
                 BookingNotFoundException => StatusCodes.Status404NotFound,
                 EventNotFoundException => StatusCodes.Status404NotFound,
                 EventValidationException => StatusCodes.Status400BadRequest,
-                InsufficientExecutionStackException => StatusCodes.Status403Forbidden,
+                InsufficientPrivilegesException => StatusCodes.Status403Forbidden,
                 LoginAlreadyUseException => StatusCodes.Status409Conflict,
                 NoAvailableSeatsException => StatusCodes.Status409Conflict,
+                InvalidCredentialsException => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
         }

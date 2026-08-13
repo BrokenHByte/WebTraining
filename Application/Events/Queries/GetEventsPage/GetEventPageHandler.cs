@@ -5,7 +5,7 @@ using MediatR;
 namespace Application.Events.Queries.GetEventsPage;
 
 public class GetEventPageHandler(IEventRepository eventRepository) : IRequestHandler<GetEventPageQuery, GetEventPageResponse>
-{    
+{
     private readonly int _defaultPage = 1;
     private readonly int _defaultSizePage = 10;
 
@@ -27,7 +27,7 @@ public class GetEventPageHandler(IEventRepository eventRepository) : IRequestHan
             TotalSeats = o.TotalSeats,
             AvailableSeats = o.AvailableSeats
         }).ToArray();
-        
+
         var eventsPaginated = new GetEventPageResponse
         {
             TotalCountEvents = countEvents,

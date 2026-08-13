@@ -18,9 +18,9 @@ public class Booking : ICloneable
     public Event Event { get; set; }
 
     public Guid UserId { get; init; }
-    
-    public User User { get; set; }  
-    
+
+    public User User { get; set; }
+
     public object Clone()
     {
         return MemberwiseClone();
@@ -39,11 +39,11 @@ public class Booking : ICloneable
         ProcessedAt = DateTime.UtcNow;
         return this;
     }
-    
+
     public Booking Cancel()
     {
         Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
         return this;
-    }  
+    }
 }

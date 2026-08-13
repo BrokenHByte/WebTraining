@@ -38,14 +38,14 @@ public class TestCancelBookingHandler
         var eventId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var userLogin = "admin@test.com";
-        
-        var booking = new Booking 
-        { 
-            Id = bookingId, 
-            EventId = eventId, 
-            UserId = userId 
+
+        var booking = new Booking
+        {
+            Id = bookingId,
+            EventId = eventId,
+            UserId = userId
         };
-        
+
         var user = new User
         {
             Id = userId,
@@ -53,33 +53,31 @@ public class TestCancelBookingHandler
             Role = User.Roles.Admin,
             HashPass = "123"
         };
-        
-        var @event = new Event 
-        { 
-            Id = eventId, 
+
+        var @event = new Event
+        {
+            Id = eventId,
             Title = "Test",
-            AvailableSeats = 10 
+            StartAt = DateTime.UtcNow.AddHours(1),
+            AvailableSeats = 10
         };
 
         _bookingRepositoryMock.Setup(x => x.GetByIdAsync(bookingId))
             .ReturnsAsync(booking);
-        
+
         _userServiceMock.Setup(x => x.Get(userLogin))
             .ReturnsAsync(user);
-        
+
         _eventRepositoryMock.Setup(x => x.GetByIdAsync(eventId))
             .ReturnsAsync(@event);
 
-        var command = new CancelBookingCommand 
-        { 
-            Id = bookingId, 
-            UserLogin = userLogin 
+        var command = new CancelBookingCommand
+        {
+            Id = bookingId,
+            UserLogin = userLogin
         };
 
-        // Act
         await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
         _bookingRepositoryMock.Verify(x => x.CancelledByIdAsync(bookingId), Times.Once);
         _eventRepositoryMock.Verify(x => x.GetByIdAsync(eventId), Times.Once);
         @event.AvailableSeats.Should().Be(11); // 10 + 1 released seat
@@ -93,42 +91,43 @@ public class TestCancelBookingHandler
         var eventId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var userLogin = "user@test.com";
-        
-        var booking = new Booking 
-        { 
-            Id = bookingId, 
-            EventId = eventId, 
-            UserId = userId 
+
+        var booking = new Booking
+        {
+            Id = bookingId,
+            EventId = eventId,
+            UserId = userId
         };
-        
-        var user = new User 
-        { 
-            Id = userId, 
+
+        var user = new User
+        {
+            Id = userId,
             Login = userLogin,
             HashPass = "123",
-            Role = User.Roles.User 
+            Role = User.Roles.User
         };
-        
-        var @event = new Event 
-        { 
-            Id = eventId, 
+
+        var @event = new Event
+        {
+            Id = eventId,
             Title = "Test",
-            AvailableSeats = 5 
+            StartAt = DateTime.UtcNow.AddHours(1),
+            AvailableSeats = 5
         };
 
         _bookingRepositoryMock.Setup(x => x.GetByIdAsync(bookingId))
             .ReturnsAsync(booking);
-        
+
         _userServiceMock.Setup(x => x.Get(userLogin))
             .ReturnsAsync(user);
-        
+
         _eventRepositoryMock.Setup(x => x.GetByIdAsync(eventId))
             .ReturnsAsync(@event);
 
-        var command = new CancelBookingCommand 
-        { 
-            Id = bookingId, 
-            UserLogin = userLogin 
+        var command = new CancelBookingCommand
+        {
+            Id = bookingId,
+            UserLogin = userLogin
         };
 
         // Act
@@ -148,34 +147,34 @@ public class TestCancelBookingHandler
         var userId = Guid.NewGuid();
         var otherUserId = Guid.NewGuid();
         var userLogin = "user@test.com";
-        
-        var booking = new Booking 
-        { 
-            Id = bookingId, 
-            EventId = Guid.NewGuid(), 
+
+        var booking = new Booking
+        {
+            Id = bookingId,
+            EventId = Guid.NewGuid(),
             UserId = otherUserId // Different user
         };
-        
-        var user = new User 
-        { 
-            Id = userId, 
-            Login = userLogin, 
+
+        var user = new User
+        {
+            Id = userId,
+            Login = userLogin,
             HashPass = "123",
-            Role = User.Roles.User 
+            Role = User.Roles.User
         };
 
         _bookingRepositoryMock.Setup(x => x.GetByIdAsync(bookingId))
             .ReturnsAsync(booking);
-        
+
         _userServiceMock.Setup(x => x.Get(userLogin))
             .ReturnsAsync(user);
 
-        var command = new CancelBookingCommand 
-        { 
-            Id = bookingId, 
-            UserLogin = userLogin 
+        var command = new CancelBookingCommand
+        {
+            Id = bookingId,
+            UserLogin = userLogin
         };
-        
+
         await Assert.ThrowsAsync<InsufficientPrivilegesException>(() =>
             _handler.Handle(command, CancellationToken.None));
 
@@ -189,24 +188,24 @@ public class TestCancelBookingHandler
         // Arrange
         var bookingId = Guid.NewGuid();
         var userLogin = "nonexistent@test.com";
-        
-        var booking = new Booking 
-        { 
-            Id = bookingId, 
-            EventId = Guid.NewGuid(), 
-            UserId = Guid.NewGuid() 
+
+        var booking = new Booking
+        {
+            Id = bookingId,
+            EventId = Guid.NewGuid(),
+            UserId = Guid.NewGuid()
         };
 
         _bookingRepositoryMock.Setup(x => x.GetByIdAsync(bookingId))
             .ReturnsAsync(booking);
-        
+
         _userServiceMock.Setup(x => x.Get(userLogin))
             .ReturnsAsync((User)null!);
 
-        var command = new CancelBookingCommand 
-        { 
-            Id = bookingId, 
-            UserLogin = userLogin 
+        var command = new CancelBookingCommand
+        {
+            Id = bookingId,
+            UserLogin = userLogin
         };
 
         // Act & Assert
@@ -214,7 +213,7 @@ public class TestCancelBookingHandler
             _handler.Handle(command, CancellationToken.None));
 
         exception.Message.Should().Be($"User {userLogin} not found");
-        
+
         _bookingRepositoryMock.Verify(x => x.DeleteByIdAsync(It.IsAny<Guid>()), Times.Never);
         _eventRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
     }
@@ -229,10 +228,10 @@ public class TestCancelBookingHandler
         _bookingRepositoryMock.Setup(x => x.GetByIdAsync(bookingId))
             .ReturnsAsync((Booking)null!);
 
-        var command = new CancelBookingCommand 
-        { 
-            Id = bookingId, 
-            UserLogin = userLogin 
+        var command = new CancelBookingCommand
+        {
+            Id = bookingId,
+            UserLogin = userLogin
         };
 
         // Act & Assert
@@ -246,24 +245,24 @@ public class TestCancelBookingHandler
         // Arrange
         var bookingId = Guid.NewGuid();
         var userLogin = "test@test.com";
-        var user = new User 
-        { 
-            Id = Guid.NewGuid(), 
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
             Login = userLogin,
             HashPass = "123",
-            Role = User.Roles.Admin 
+            Role = User.Roles.Admin
         };
 
         _bookingRepositoryMock.Setup(x => x.GetByIdAsync(bookingId))
             .ReturnsAsync((Booking)null!);
-        
+
         _userServiceMock.Setup(x => x.Get(userLogin))
             .ReturnsAsync(user);
 
-        var command = new CancelBookingCommand 
-        { 
-            Id = bookingId, 
-            UserLogin = userLogin 
+        var command = new CancelBookingCommand
+        {
+            Id = bookingId,
+            UserLogin = userLogin
         };
 
         // Act & Assert

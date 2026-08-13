@@ -93,10 +93,10 @@ public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext d
             throw new BookingNotFoundException($"Booking {bookingId} not found or booking cancelled");
         }
 
-        oneBooking.Status  = Booking.BookingStatus.Cancelled;
+        oneBooking.Status = Booking.BookingStatus.Cancelled;
         await db.SaveChangesAsync();
     }
-    
+
     public IQueryable<Booking> GetBookingsByEvent(Guid eventId)
     {
         return db.Bookings.Where(x => x.EventId == eventId);

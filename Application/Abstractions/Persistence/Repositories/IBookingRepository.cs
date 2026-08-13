@@ -8,7 +8,7 @@ public interface IBookingRepository
     IQueryable<Booking> GetAll();
     IQueryable<Booking> GetPending();
     IQueryable<Booking> GetBookingsByEvent(Guid eventId);
-    IQueryable<Booking> GetBookingsByUser(Guid userId);   
+    IQueryable<Booking> GetBookingsByUser(Guid userId);
 
     Task<Booking> CreateAsync(Guid eventId, Guid userId);
     Task UpdateAsync(Guid bookingId, Booking data);

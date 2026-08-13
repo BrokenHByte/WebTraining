@@ -41,7 +41,7 @@ public class TestBookingRepository(PostgresFixture fixture)
     public async Task CreateBookingTest()
     {
         await fixture.ResetDatabaseAsync();
-        
+
         var data = await prepareDataEvent();
         var guids = data.Item1;
         var userId = data.Item2;

@@ -27,7 +27,7 @@ public class BookingsController(IMediator mediator) : ControllerBase
         Response.Headers.Location = $"/bookings/{booking.Id}";
         return Accepted(booking);
     }
-    
+
     [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBookingAsync(Guid id)
@@ -41,14 +41,15 @@ public class BookingsController(IMediator mediator) : ControllerBase
         });
         return Ok();
     }
-    
+
     [Authorize]
     [HttpGet("{id}")]
     public async Task<ActionResult<GetBookingByIdResponse>> GetByBookingId(Guid id)
     {
         var booking = await mediator.Send(new GetBookingByIdQuery()
         {
-            Id = id
+            Id = id,
+            UserLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException()
         });
         return Ok(booking);
     }

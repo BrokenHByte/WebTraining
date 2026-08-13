@@ -32,6 +32,8 @@ namespace Infrastructure.Data.Migrations
                     table.PrimaryKey("pk_users", x => x.id);
                 });
 
+            migrationBuilder.Sql("TRUNCATE TABLE bookings"); // Бронь без юзера пожалуй смысла не имеет. Конкретно здесь
+
             migrationBuilder.CreateIndex(
                 name: "ix_bookings_user_id",
                 table: "bookings",

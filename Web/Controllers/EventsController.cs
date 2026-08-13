@@ -20,22 +20,25 @@ public class EventsController(
         [FromQuery] DateTime? to,
         [FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        var result = await mediator.Send(new GetEventPageQuery(){ Title = title,
+        var result = await mediator.Send(new GetEventPageQuery()
+        {
+            Title = title,
             From = from,
             To = to,
             Page = page,
-            PageSize = pageSize});
+            PageSize = pageSize
+        });
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<GetEventByIdResponse>> GetByIdAsync(Guid id)
     {
-        var result = await mediator.Send(new GetEventByIdQuery(){ Id = id});
+        var result = await mediator.Send(new GetEventByIdQuery() { Id = id });
         return Ok(result);
     }
-    
-    [HttpPost]   
+
+    [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)
     {
