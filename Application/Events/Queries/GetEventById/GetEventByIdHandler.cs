@@ -13,9 +13,9 @@ public class GetEventByIdHandler(IEventRepository eventRepository) : IRequestHan
             Id = result.Id,
             Title = result.Title,
             Description = result.Description,
-            StartAt =  result.StartAt,
-            EndAt =  result.EndAt,
-            AvailableSeats =  result.AvailableSeats,
+            StartAt = result.StartAt,
+            EndAt = result.EndAt,
+            AvailableSeats = result.AvailableSeats,
             TotalSeats = result.TotalSeats
         };
     }

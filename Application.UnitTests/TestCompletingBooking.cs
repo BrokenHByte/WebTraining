@@ -36,7 +36,7 @@ public class TestCompletingBooking
         {
             new() { Id = Guid.NewGuid(), EventId = _eventGuid1, Status = Booking.BookingStatus.Pending }
         };
-        
+
     }
 
     [Fact]
@@ -55,17 +55,17 @@ public class TestCompletingBooking
 
         _bookingRepositoryMock.Setup(x => x.GetPending()).Returns(_testBookings.AsQueryable());
         _eventRepositoryMock.Setup(x => x.GetByIdAsync(_eventGuid1)).ReturnsAsync(event1);
-        _bookingRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<Booking>())).Callback<Guid, Booking>((_,_) => 
+        _bookingRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<Booking>())).Callback<Guid, Booking>((_, _) =>
         {
             _testBookings[0].Status = Booking.BookingStatus.Confirmed;
         }).Returns(Task.CompletedTask);
-        
+
         var loggerMock = new Mock<ILogger<CompletingBookingHandler>>();
         var handler = new CompletingBookingHandler(_eventRepositoryMock.Object, _bookingRepositoryMock.Object, loggerMock.Object);
         var command = new CompletingBookingCommand();
-        
+
         await handler.Handle(command, CancellationToken.None);
-        
+
         await Task.Delay(3000);
         cts.CancelAfter(100);
         Assert.Equal(Booking.BookingStatus.Confirmed, _testBookings[0].Status);

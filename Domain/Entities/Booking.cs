@@ -6,7 +6,8 @@ public class Booking : ICloneable
     {
         Pending,
         Confirmed,
-        Rejected
+        Rejected,
+        Cancelled
     }
 
     public Guid Id { get; init; }
@@ -15,6 +16,10 @@ public class Booking : ICloneable
     public DateTime CreatedAt { get; init; }
     public DateTime? ProcessedAt { get; set; }
     public Event Event { get; set; }
+
+    public Guid UserId { get; init; }
+
+    public User User { get; set; }
 
     public object Clone()
     {
@@ -31,6 +36,13 @@ public class Booking : ICloneable
     public Booking Reject()
     {
         Status = BookingStatus.Rejected;
+        ProcessedAt = DateTime.UtcNow;
+        return this;
+    }
+
+    public Booking Cancel()
+    {
+        Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
         return this;
     }

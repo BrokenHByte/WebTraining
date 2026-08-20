@@ -38,7 +38,7 @@ public class PostgresFixture : IAsyncLifetime
         var context = CreateContext();
         // Удаление через EnsureDeleted и применение миграции заново не работает. Ошибка открытого соединения, проще TRUNCATE
         await context.Database.ExecuteSqlRawAsync(
-            "TRUNCATE TABLE bookings, events RESTART IDENTITY CASCADE");
+            "TRUNCATE TABLE bookings, events, users RESTART IDENTITY CASCADE");
     }
 }
 

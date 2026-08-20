@@ -1,6 +1,10 @@
-﻿using Application.Abstractions.Persistence.Repositories;
+﻿using Application.Abstractions.Persistence.Common;
+using Application.Abstractions.Persistence.Repositories;
+using Application.Abstractions.Persistence.Services;
 using Infrastructure.Background;
 using Infrastructure.Data.Repositories;
+using Infrastructure.Data.Services;
+using Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,10 +21,14 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<ITokenService, TokenService>();
         services.AddHostedService<TestCompletingBookingBackgroundService>();
-        
+
         return services;
     }
+
 
     public static async Task ApplyMigrationsAsync(this IServiceProvider serviceProvider)
     {

@@ -8,6 +8,7 @@ public static class DateEventValidator
 {
     public static void Check(DateTime startAt, DateTime endAt)
     {
-        throw new EventValidationException("Event with id is invalid: EndAt <= StartAt");
+        if (startAt >= endAt)
+            throw new EventValidationException("Event with id is invalid: EndAt <= StartAt");
     }
 }

@@ -13,10 +13,10 @@ public class UpdateEventHandler(IEventRepository eventRepository) : IRequestHand
         await eventRepository.UpdateAsync(request.ExistingId, new Event()
         {
             Id = request.ExistingId,
-            Title =  request.Title,
+            Title = request.Title,
             Description = request.Description,
-            StartAt =  request.StartAt,
-            EndAt =   request.EndAt
+            StartAt = request.StartAt,
+            EndAt = request.EndAt
         });
     }
 }

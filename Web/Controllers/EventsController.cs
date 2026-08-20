@@ -4,6 +4,7 @@ using Application.Events.Commands.UpdateEvent;
 using Application.Events.Queries.GetEventById;
 using Application.Events.Queries.GetEventsPage;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers;
@@ -19,22 +20,26 @@ public class EventsController(
         [FromQuery] DateTime? to,
         [FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        var result = await mediator.Send(new GetEventPageQuery(){ Title = title,
+        var result = await mediator.Send(new GetEventPageQuery()
+        {
+            Title = title,
             From = from,
             To = to,
             Page = page,
-            PageSize = pageSize});
+            PageSize = pageSize
+        });
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<GetEventByIdResponse>> GetByIdAsync(Guid id)
     {
-        var result = await mediator.Send(new GetEventByIdQuery(){ Id = id});
+        var result = await mediator.Send(new GetEventByIdQuery() { Id = id });
         return Ok(result);
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)
     {
         if (!ModelState.IsValid)
@@ -45,6 +50,7 @@ public class EventsController(
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateEventAsync([FromBody] UpdateEventCommand data)
     {
         if (!ModelState.IsValid)
@@ -54,6 +60,7 @@ public class EventsController(
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteEventAsync([FromBody] DeleteEventCommand data)
     {
         if (!ModelState.IsValid)
