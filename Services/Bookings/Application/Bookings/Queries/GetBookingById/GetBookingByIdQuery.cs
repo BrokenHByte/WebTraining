@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Bookings.Queries.GetBookingById;
+namespace Bookings.Application.Bookings.Queries.GetBookingById;
 
 public sealed record GetBookingByIdQuery : IRequest<GetBookingByIdResponse>
 {

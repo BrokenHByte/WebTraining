@@ -1,8 +1,7 @@
-﻿using Application.Abstractions.Persistence.Services;
-using Application.Users.Commands.RegistrationUser;
+﻿using Authorization.Application.Abstractions.Persistence.Services;
 using MediatR;
 
-namespace Application.Users.Commands.AuthorizeUser;
+namespace Authorization.Application.Users.Commands.AuthorizeUser;
 
 public class AuthorizeUserHandler(IUserService userService) : IRequestHandler<AuthorizeUserCommand, AuthorizeUserResponse>
 {

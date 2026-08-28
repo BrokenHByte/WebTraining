@@ -1,17 +1,13 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Abstractions.Persistence.Services;
-using Application.Common.Config;
-using Application.Common.Locks;
-using Domain.Entities;
-using Domain.Exceptions;
+﻿using Bookings.Application.Abstractions.Persistence.Repositories;
+using Bookings.Application.Common.Config;
 using MediatR;
 using Microsoft.Extensions.Options;
 
-namespace Application.Bookings.Commands.CreateBooking;
+namespace Bookings.Application.Bookings.Commands.CreateBooking;
 
-public class CreateBookingHandler(IUserService userService, IEventRepository eventRepository, IBookingRepository bookingRepository, IOptions<BookingSettings> bookingOptions) : IRequestHandler<CreateBookingCommand, CreateBookingResponse>
+public class CreateBookingHandler(IBookingRepository bookingRepository, IOptions<BookingSettings> bookingOptions) : IRequestHandler<CreateBookingCommand, CreateBookingResponse>
 {
-    public async Task<CreateBookingResponse> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
+  /*  public async Task<CreateBookingResponse> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
     {
         var eventOne = await eventRepository.GetByIdAsync(request.EventId);
         if (DateTime.UtcNow > eventOne.StartAt)
@@ -38,5 +34,9 @@ public class CreateBookingHandler(IUserService userService, IEventRepository eve
 
         var result = await bookingRepository.CreateAsync(request.EventId, user.Id);
         return new CreateBookingResponse { Id = result.Id, EventId = result.EventId, Status = result.Status };
-    }
+    }*/
+  public Task<CreateBookingResponse> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
+  {
+      throw new NotImplementedException();
+  }
 }

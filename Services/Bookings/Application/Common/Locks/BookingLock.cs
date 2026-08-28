@@ -1,4 +1,4 @@
-﻿namespace Application.Common.Locks;
+﻿namespace Bookings.Application.Common.Locks;
 
 public static class BookingLock
 {

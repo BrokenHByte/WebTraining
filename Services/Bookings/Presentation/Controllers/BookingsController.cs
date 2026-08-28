@@ -1,8 +1,7 @@
 using System.Security.Claims;
-using Application.Bookings.Commands.CreateBooking;
-using Application.Bookings.Commands.DeleteBooking;
-using Application.Bookings.Queries.GetBookingById;
-using Domain.Entities;
+using Bookings.Application.Bookings.Commands.CreateBooking;
+using Bookings.Application.Bookings.Commands.DeleteBooking;
+using Bookings.Application.Bookings.Queries.GetBookingById;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

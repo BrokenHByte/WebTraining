@@ -1,8 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
-using Application.Common.Config;
-using Application.Events.Commands.CreateEvent;
-using Infrastructure.Data.Extensions;
+using Authorization.Application.Users.Commands.AuthorizeUser;
+using Authorization.Infrastructure.Data.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -13,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(CreateEventHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(AuthorizeUserHandler).Assembly);
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -33,9 +32,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization();
-builder.Services.Configure<BookingSettings>(
-    builder.Configuration.GetSection("Booking")
-);
 
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(c =>

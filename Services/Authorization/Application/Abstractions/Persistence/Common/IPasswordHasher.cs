@@ -1,4 +1,4 @@
-﻿namespace Application.Abstractions.Persistence.Common;
+﻿namespace Authorization.Application.Abstractions.Persistence.Common;
 
 public interface IPasswordHasher
 {

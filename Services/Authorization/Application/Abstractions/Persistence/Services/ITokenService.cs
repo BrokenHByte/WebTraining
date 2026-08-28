@@ -1,6 +1,6 @@
-﻿using Domain.Entities;
+﻿using Authorization.Domain.Entities;
 
-namespace Application.Abstractions.Persistence.Services;
+namespace Authorization.Application.Abstractions.Persistence.Services;
 
 public interface ITokenService
 {

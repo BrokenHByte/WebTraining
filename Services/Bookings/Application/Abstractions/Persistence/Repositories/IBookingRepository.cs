@@ -1,6 +1,6 @@
-﻿using Domain.Entities;
+﻿using Bookings.Domain.Entities;
 
-namespace Application.Abstractions.Persistence.Repositories;
+namespace Bookings.Application.Abstractions.Persistence.Repositories;
 
 public interface IBookingRepository
 {

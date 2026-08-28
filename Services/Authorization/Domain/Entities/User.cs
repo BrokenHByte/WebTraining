@@ -1,4 +1,4 @@
-﻿namespace Domain.Entities;
+﻿namespace Authorization.Domain.Entities;
 
 public class User
 {
@@ -11,6 +11,4 @@ public class User
     public required string Login { get; set; }
     public required string HashPass { get; set; }
     public Roles Role { get; set; } = Roles.User;
-
-    public List<Booking> Bookings { get; set; }
 }

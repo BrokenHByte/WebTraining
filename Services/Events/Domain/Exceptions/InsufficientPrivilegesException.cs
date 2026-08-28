@@ -1,3 +1,3 @@
-﻿namespace Domain.Exceptions;
+﻿namespace Events.Domain.Exceptions;
 
 public class InsufficientPrivilegesException(string message) : Exception(message);

@@ -1,5 +1,5 @@
-﻿using Application.Users.Commands.AuthorizeUser;
-using Application.Users.Commands.RegistrationUser;
+﻿using Authorization.Application.Users.Commands.AuthorizeUser;
+using Authorization.Application.Users.Commands.RegistrationUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

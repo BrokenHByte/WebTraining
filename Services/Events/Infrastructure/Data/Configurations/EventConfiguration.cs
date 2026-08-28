@@ -1,8 +1,8 @@
-using Domain.Entities;
+using Events.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Data.Configurations;
+namespace Events.Infrastructure.Data.Configurations;
 
 public class EventConfiguration : IEntityTypeConfiguration<Event>
 {
@@ -17,8 +17,5 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
             .IsRequired();
 
         builder.Property(x => x.Description).HasMaxLength(500);
-        builder.HasMany(b => b.Bookings)
-            .WithOne(a => a.Event)
-            .HasForeignKey(b => b.EventId);
     }
 }

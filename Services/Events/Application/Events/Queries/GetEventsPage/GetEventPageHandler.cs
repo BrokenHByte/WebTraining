@@ -1,8 +1,8 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Events.Queries.GetEventById;
+﻿using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Application.Events.Queries.GetEventById;
 using MediatR;
 
-namespace Application.Events.Queries.GetEventsPage;
+namespace Events.Application.Events.Queries.GetEventsPage;
 
 public class GetEventPageHandler(IEventRepository eventRepository) : IRequestHandler<GetEventPageQuery, GetEventPageResponse>
 {

@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Events.Commands.CreateEvent;
+namespace Events.Application.Events.Commands.CreateEvent;
 
 public sealed record CreateEventCommand : IRequest<Guid>
 {

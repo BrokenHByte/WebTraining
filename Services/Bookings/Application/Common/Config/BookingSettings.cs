@@ -1,4 +1,4 @@
-﻿namespace Application.Common.Config;
+﻿namespace Bookings.Application.Common.Config;
 
 public class BookingSettings
 {

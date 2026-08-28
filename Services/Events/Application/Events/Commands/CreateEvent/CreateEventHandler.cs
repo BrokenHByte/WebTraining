@@ -1,10 +1,9 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Events.Common;
-using Domain.Exceptions;
+﻿using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Application.Events.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Application.Events.Commands.CreateEvent;
+namespace Events.Application.Events.Commands.CreateEvent;
 
 public class CreateEventHandler(IEventRepository eventRepository, ILogger<CreateEventHandler> logger) : IRequestHandler<CreateEventCommand, Guid>
 {

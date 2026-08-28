@@ -1,5 +1,5 @@
 ﻿using MediatR;
 
-namespace Application.Bookings.Commands.CompletingBooking;
+namespace Bookings.Application.Bookings.Commands.CompletingBooking;
 
 public sealed record CompletingBookingCommand : IRequest;

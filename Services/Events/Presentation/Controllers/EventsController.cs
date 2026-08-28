@@ -1,8 +1,8 @@
-using Application.Events.Commands.CreateEvent;
-using Application.Events.Commands.DeleteEvent;
-using Application.Events.Commands.UpdateEvent;
-using Application.Events.Queries.GetEventById;
-using Application.Events.Queries.GetEventsPage;
+using Events.Application.Events.Commands.CreateEvent;
+using Events.Application.Events.Commands.DeleteEvent;
+using Events.Application.Events.Commands.UpdateEvent;
+using Events.Application.Events.Queries.GetEventById;
+using Events.Application.Events.Queries.GetEventsPage;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

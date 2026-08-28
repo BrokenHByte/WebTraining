@@ -1,8 +1,6 @@
-﻿using Application.Bookings.Commands.CreateBooking;
-using Domain.Entities;
-using MediatR;
+﻿using MediatR;
 
-namespace Application.Bookings.Commands.DeleteBooking;
+namespace Bookings.Application.Bookings.Commands.DeleteBooking;
 
 public sealed record CancelBookingCommand : IRequest
 {

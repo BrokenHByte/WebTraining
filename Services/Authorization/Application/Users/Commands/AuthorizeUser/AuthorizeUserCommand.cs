@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Users.Commands.AuthorizeUser;
+namespace Authorization.Application.Users.Commands.AuthorizeUser;
 
 public sealed record AuthorizeUserCommand : IRequest<AuthorizeUserResponse>
 {

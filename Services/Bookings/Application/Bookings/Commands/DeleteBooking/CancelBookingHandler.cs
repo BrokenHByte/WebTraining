@@ -1,15 +1,11 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Abstractions.Persistence.Services;
-using Application.Common.Locks;
-using Domain.Entities;
-using Domain.Exceptions;
+﻿using Bookings.Application.Abstractions.Persistence.Repositories;
 using MediatR;
 
-namespace Application.Bookings.Commands.DeleteBooking;
+namespace Bookings.Application.Bookings.Commands.DeleteBooking;
 
-public class CancelBookingHandler(IUserService userService, IEventRepository eventRepository, IBookingRepository bookingRepository) : IRequestHandler<CancelBookingCommand>
+public class CancelBookingHandler(IBookingRepository bookingRepository) : IRequestHandler<CancelBookingCommand>
 {
-    public async Task Handle(CancelBookingCommand request, CancellationToken cancellationToken)
+ /*   public async Task Handle(CancelBookingCommand request, CancellationToken cancellationToken)
     {
         await BookingLock.ExecuteAsync(async () =>
         {
@@ -34,5 +30,9 @@ public class CancelBookingHandler(IUserService userService, IEventRepository eve
                 throw new InsufficientPrivilegesException("You do not have permission to delete this booking");
             }
         }, cancellationToken);
-    }
+    }*/
+ public Task Handle(CancelBookingCommand request, CancellationToken cancellationToken)
+ {
+     throw new NotImplementedException();
+ }
 }

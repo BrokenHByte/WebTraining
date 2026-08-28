@@ -1,15 +1,12 @@
-﻿using Application.Abstractions.Persistence.Common;
-using Application.Abstractions.Persistence.Repositories;
-using Application.Abstractions.Persistence.Services;
-using Infrastructure.Background;
-using Infrastructure.Data.Repositories;
-using Infrastructure.Data.Services;
-using Infrastructure.Security;
+﻿using Authorization.Application.Abstractions.Persistence.Common;
+using Authorization.Application.Abstractions.Persistence.Services;
+using Authorization.Infrastructure.Data.Services;
+using Authorization.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure.Data.Extensions;
+namespace Authorization.Infrastructure.Data.Extensions;
 
 public static class DependencyInjection
 {
@@ -18,13 +15,10 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
-        services.AddScoped<IEventRepository, EventRepository>();
-        services.AddScoped<IBookingRepository, BookingRepository>();
+            options.UseNpgsql(configuration.GetConnectionString("AuthorizationConnection")).UseSnakeCaseNamingConvention());
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, TokenService>();
-        services.AddHostedService<TestCompletingBookingBackgroundService>();
 
         return services;
     }

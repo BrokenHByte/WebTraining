@@ -1,4 +1,4 @@
-namespace Domain.Entities;
+namespace Events.Domain.Entities;
 
 public class Event
 {
@@ -9,7 +9,6 @@ public class Event
     public DateTime EndAt { get; set; }
     public int TotalSeats { get; set; }
     public int AvailableSeats { get; set; }
-    public List<Booking> Bookings { get; set; }
 
     public bool TryReserveSeats(int count = 1)
     {

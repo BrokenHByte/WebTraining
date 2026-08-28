@@ -1,7 +1,7 @@
-﻿using Domain.Entities;
+﻿using Authorization.Domain.Entities;
 using MediatR;
 
-namespace Application.Users.Commands.RegistrationUser;
+namespace Authorization.Application.Users.Commands.RegistrationUser;
 
 public sealed record RegistrationUserCommand : IRequest
 {

@@ -1,4 +1,4 @@
-namespace Application.Events.Queries.GetEventById;
+namespace Events.Application.Events.Queries.GetEventById;
 
 public record GetEventByIdResponse
 {

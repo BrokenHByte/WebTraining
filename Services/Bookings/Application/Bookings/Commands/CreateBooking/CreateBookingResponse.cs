@@ -1,6 +1,6 @@
-﻿using Domain.Entities;
+﻿using Bookings.Domain.Entities;
 
-namespace Application.Bookings.Commands.CreateBooking;
+namespace Bookings.Application.Bookings.Commands.CreateBooking;
 
 public sealed record CreateBookingResponse
 {

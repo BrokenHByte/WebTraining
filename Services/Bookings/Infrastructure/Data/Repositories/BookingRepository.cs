@@ -1,10 +1,10 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Domain.Entities;
-using Domain.Exceptions;
+﻿using Bookings.Application.Abstractions.Persistence.Repositories;
+using Bookings.Domain.Entities;
+using Bookings.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Data.Repositories;
+namespace Bookings.Infrastructure.Data.Repositories;
 
 public class BookingRepository(ILogger<BookingRepository> logger, AppDbContext db) : IBookingRepository
 {

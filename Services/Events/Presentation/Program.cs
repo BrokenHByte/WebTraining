@@ -1,8 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
-using Application.Common.Config;
-using Application.Events.Commands.CreateEvent;
-using Infrastructure.Data.Extensions;
+using Events.Application.Events.Commands.CreateEvent;
+using Events.Infrastructure.Data.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -33,9 +32,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization();
-builder.Services.Configure<BookingSettings>(
-    builder.Configuration.GetSection("Booking")
-);
 
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(c =>

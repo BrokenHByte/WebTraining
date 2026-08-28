@@ -1,11 +1,5 @@
-using Application.Bookings.Commands.CompletingBooking;
-using MediatR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
-namespace Infrastructure.Background;
-
+namespace Bookings.Infrastructure.Background;
+/*
 public class TestCompletingBookingBackgroundService(IServiceProvider provider,
     ILogger<TestCompletingBookingBackgroundService> logger)
     : BackgroundService
@@ -21,4 +15,4 @@ public class TestCompletingBookingBackgroundService(IServiceProvider provider,
         }
         logger.LogInformation("Booking background service stopped");
     }
-}
+}*/

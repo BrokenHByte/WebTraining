@@ -1,6 +1,6 @@
-﻿using Application.Events.Queries.GetEventById;
+﻿using Events.Application.Events.Queries.GetEventById;
 
-namespace Application.Events.Queries.GetEventsPage;
+namespace Events.Application.Events.Queries.GetEventsPage;
 
 public record GetEventPageResponse
 {

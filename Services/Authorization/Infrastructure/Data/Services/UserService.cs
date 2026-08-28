@@ -1,11 +1,10 @@
-﻿using Application.Abstractions.Persistence.Common;
-using Application.Abstractions.Persistence.Services;
-using Domain.Entities;
-using Domain.Exceptions;
+﻿using Authorization.Application.Abstractions.Persistence.Common;
+using Authorization.Application.Abstractions.Persistence.Services;
+using Authorization.Domain.Entities;
+using Authorization.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
-namespace Infrastructure.Data.Services;
+namespace Authorization.Infrastructure.Data.Services;
 
 
 public class UserService(AppDbContext db, IPasswordHasher passwordHasher, ITokenService tokenService) : IUserService

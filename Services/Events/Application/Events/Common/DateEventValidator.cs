@@ -1,8 +1,6 @@
-﻿using Application.Events.Commands.CreateEvent;
-using Domain.Exceptions;
-using FluentValidation;
+﻿using Events.Domain.Exceptions;
 
-namespace Application.Events.Common;
+namespace Events.Application.Events.Common;
 
 public static class DateEventValidator
 {

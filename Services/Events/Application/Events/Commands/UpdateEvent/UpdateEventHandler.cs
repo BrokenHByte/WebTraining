@@ -1,9 +1,9 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Events.Common;
-using Domain.Entities;
+﻿using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Application.Events.Common;
+using Events.Domain.Entities;
 using MediatR;
 
-namespace Application.Events.Commands.UpdateEvent;
+namespace Events.Application.Events.Commands.UpdateEvent;
 
 public class UpdateEventHandler(IEventRepository eventRepository) : IRequestHandler<UpdateEventCommand>
 {

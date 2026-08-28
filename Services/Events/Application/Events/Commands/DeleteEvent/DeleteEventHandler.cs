@@ -1,7 +1,7 @@
-﻿using Application.Abstractions.Persistence.Repositories;
+﻿using Events.Application.Abstractions.Persistence.Repositories;
 using MediatR;
 
-namespace Application.Events.Commands.DeleteEvent;
+namespace Events.Application.Events.Commands.DeleteEvent;
 
 public class DeleteEventHandler(IEventRepository eventRepository) : IRequestHandler<DeleteEventCommand>
 {

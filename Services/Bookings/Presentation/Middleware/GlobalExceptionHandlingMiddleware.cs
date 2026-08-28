@@ -1,4 +1,4 @@
-using Domain.Exceptions;
+using Bookings.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Middleware;
@@ -44,11 +44,7 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
                 BookingBeginEventException => StatusCodes.Status400BadRequest,
                 BookingExceedingLimitException => StatusCodes.Status409Conflict,
                 BookingNotFoundException => StatusCodes.Status404NotFound,
-                EventNotFoundException => StatusCodes.Status404NotFound,
-                EventValidationException => StatusCodes.Status400BadRequest,
                 InsufficientPrivilegesException => StatusCodes.Status403Forbidden,
-                LoginAlreadyUseException => StatusCodes.Status409Conflict,
-                NoAvailableSeatsException => StatusCodes.Status409Conflict,
                 InvalidCredentialsException => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };

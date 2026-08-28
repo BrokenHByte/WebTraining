@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Bookings.Commands.CreateBooking;
+namespace Bookings.Application.Bookings.Commands.CreateBooking;
 
 public sealed record CreateBookingCommand : IRequest<CreateBookingResponse>
 {

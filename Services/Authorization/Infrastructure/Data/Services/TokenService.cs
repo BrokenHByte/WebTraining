@@ -1,12 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Application.Abstractions.Persistence.Services;
-using Domain.Entities;
+using Authorization.Application.Abstractions.Persistence.Services;
+using Authorization.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Infrastructure.Data.Services;
+namespace Authorization.Infrastructure.Data.Services;
 
 public class TokenService(IConfiguration configuration) : ITokenService
 {
@@ -35,4 +35,5 @@ public class TokenService(IConfiguration configuration) : ITokenService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+    
 }

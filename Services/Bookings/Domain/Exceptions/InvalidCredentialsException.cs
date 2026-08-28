@@ -1,3 +1,3 @@
-﻿namespace Domain.Exceptions;
+﻿namespace Bookings.Domain.Exceptions;
 
 public class InvalidCredentialsException(string message) : Exception(message);

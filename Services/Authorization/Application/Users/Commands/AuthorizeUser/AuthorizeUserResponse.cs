@@ -1,4 +1,4 @@
-﻿namespace Application.Users.Commands.AuthorizeUser;
+﻿namespace Authorization.Application.Users.Commands.AuthorizeUser;
 
 public record AuthorizeUserResponse
 {

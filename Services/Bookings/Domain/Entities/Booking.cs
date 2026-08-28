@@ -1,4 +1,4 @@
-namespace Domain.Entities;
+namespace Bookings.Domain.Entities;
 
 public class Booking : ICloneable
 {
@@ -12,15 +12,11 @@ public class Booking : ICloneable
 
     public Guid Id { get; init; }
     public Guid EventId { get; init; }
+    public Guid UserId { get; init; }
     public BookingStatus Status { get; set; }
     public DateTime CreatedAt { get; init; }
     public DateTime? ProcessedAt { get; set; }
-    public Event Event { get; set; }
-
-    public Guid UserId { get; init; }
-
-    public User User { get; set; }
-
+    
     public object Clone()
     {
         return MemberwiseClone();

@@ -1,6 +1,6 @@
-﻿using Domain.Entities;
+﻿using Events.Domain.Entities;
 
-namespace Application.Abstractions.Persistence.Repositories;
+namespace Events.Application.Abstractions.Persistence.Repositories;
 
 public interface IEventRepository
 {

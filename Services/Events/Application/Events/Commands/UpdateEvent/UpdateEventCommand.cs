@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Events.Commands.UpdateEvent;
+namespace Events.Application.Events.Commands.UpdateEvent;
 
 public sealed record UpdateEventCommand : IRequest
 {

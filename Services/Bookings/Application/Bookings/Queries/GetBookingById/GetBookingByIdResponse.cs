@@ -1,6 +1,6 @@
-﻿using Domain.Entities;
+﻿using Bookings.Domain.Entities;
 
-namespace Application.Bookings.Queries.GetBookingById;
+namespace Bookings.Application.Bookings.Queries.GetBookingById;
 
 public sealed record GetBookingByIdResponse
 {

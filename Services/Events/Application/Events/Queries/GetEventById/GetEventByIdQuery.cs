@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Events.Queries.GetEventById;
+namespace Events.Application.Events.Queries.GetEventById;
 
 public sealed record GetEventByIdQuery : IRequest<GetEventByIdResponse>
 {

@@ -1,10 +1,10 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Domain.Entities;
-using Domain.Exceptions;
+﻿using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Domain.Entities;
+using Events.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Data.Repositories;
+namespace Events.Infrastructure.Data.Repositories;
 
 
 public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) : IEventRepository

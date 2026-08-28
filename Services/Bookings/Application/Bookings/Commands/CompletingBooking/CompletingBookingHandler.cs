@@ -1,15 +1,13 @@
-﻿using Application.Abstractions.Persistence.Repositories;
-using Application.Common.Locks;
-using Domain.Entities;
-using Domain.Exceptions;
+﻿using Bookings.Application.Abstractions.Persistence.Repositories;
+using Bookings.Application.Bookings.Commands.CompletingBooking;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Bookings.Commands.CompletingBooking;
 
-public class CompletingBookingHandler(IEventRepository eventRepository, IBookingRepository bookingRepository, ILogger<CompletingBookingHandler> logger) : IRequestHandler<CompletingBookingCommand>
+public class CompletingBookingHandler(IBookingRepository bookingRepository, ILogger<CompletingBookingHandler> logger) : IRequestHandler<CompletingBookingCommand>
 {
-    private async Task ProcessBookingAsync(Booking booking, CancellationToken stoppingToken)
+  /*  private async Task ProcessBookingAsync(Booking booking, CancellationToken stoppingToken)
     {
         await Task.Delay(2000, stoppingToken);
         Event? existedEvent = null;
@@ -51,5 +49,9 @@ public class CompletingBookingHandler(IEventRepository eventRepository, IBooking
         await Task.WhenAll(tasks);
         if (pendingBookings.Count > 0)
             logger.LogInformation($"Booking {pendingBookings.Count} bookings updated.");
-    }
+    }*/
+  public Task Handle(CompletingBookingCommand request, CancellationToken cancellationToken)
+  {
+      throw new NotImplementedException();
+  }
 }
