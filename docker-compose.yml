@@ -1,26 +1,184 @@
-# PostgreSQL для EventApi — совпадает с ConnectionStrings:DefaultConnection в appsettings.json
-# Запуск из корня репозитория: docker compose up -d
-# Остановка: docker compose down
-# Данные сохраняются в именованном томе eventapi_pgdata
-
 services:
-  postgres:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - app-network
+  
+  kafka:
+    image: confluentinc/cp-kafka:6.2.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CREATE_TOPICS: "event-topic:1:1,booking-topic:1:1,auth-topic:1:1"
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+        test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list" ]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+    networks:
+        - app-network
+
+  postgres-event:
     image: postgres:16
-    container_name: eventapi-postgres
+    container_name: postgres-event
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: eventapi
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${EVENT_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${EVENT_POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - eventapi_pgdata:/var/lib/postgresql/data
+      - event_service_pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d eventapi"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+      
+  postgres-booking:
+    image: postgres:16
+    container_name: postgres-booking
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${BOOKING_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BOOKING_POSTGRES_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - booking_service_pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+  postgres-authorization:
+    image: postgres:16
+    container_name: postgres-authorization
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUTHORIZATION_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AUTHORIZATION_POSTGRES_DB}
+    ports:
+      - "5435:5432"
+    volumes:
+      - authorization_service_pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5      
+  
+  event-service:
+    build:
+      context: ./Services
+      dockerfile: Events/Dockerfile
+    container_name: event-service
+    depends_on:
+      postgres-event:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__EventsConnection=${EVENT_DB_CONNECTION}
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__Topic=event-topic
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
+    ports:
+      - "5001:8080"
+    networks:
+      - app-network
+    restart: unless-stopped    
+
+  booking-service:
+    build:
+      context: ./Services
+      dockerfile: Bookings/Dockerfile
+    container_name: booking-service
+    depends_on:
+      postgres-booking:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__BookingsConnection=${BOOKING_DB_CONNECTION}
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__Topic=booking-topic
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
+    ports:
+      - "5002:8080"
+    networks:
+      - app-network
+    restart: unless-stopped
+  
+  authorization-service:
+    build:
+      context: ./Services
+      dockerfile: Authorization/Dockerfile
+    container_name: authorization-service
+    depends_on:
+      postgres-authorization:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__AuthorizationConnection=${AUTHORIZATION_DB_CONNECTION}
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__Topic=authorization-topic
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
+    ports:
+      - "5003:8080"
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
-  eventapi_pgdata:
+  kafka_data:
+  event_service_pgdata:
+  booking_service_pgdata:
+  authorization_service_pgdata: 
+
+networks:
+  app-network:
+    driver: bridge
