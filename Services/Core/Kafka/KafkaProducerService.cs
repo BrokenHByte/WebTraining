@@ -12,14 +12,14 @@ public class KafkaProducerService : IDisposable
     private readonly string _bootstrapServers;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly ILogger<KafkaProducerService> _logger;
-    
+
     public KafkaProducerService(
-        string bootstrapServers, string clientId, 
+        string bootstrapServers, string clientId,
         ILogger<KafkaProducerService> logger)
     {
         _bootstrapServers = bootstrapServers;
         _logger = logger;
-        
+
         var config = new ProducerConfig
         {
             BootstrapServers = _bootstrapServers,
@@ -28,7 +28,7 @@ public class KafkaProducerService : IDisposable
             MessageTimeoutMs = 5000,
             EnableDeliveryReports = true
         };
-        
+
         _producer = new ProducerBuilder<string, string>(config).Build();
         _jsonOptions = new JsonSerializerOptions
         {
@@ -36,17 +36,17 @@ public class KafkaProducerService : IDisposable
             WriteIndented = false
         };
     }
-    
+
     public async Task SendAsync<T>(string topic, Guid key, T message)
     {
         try
         {
             var json = JsonSerializer.Serialize(message, _jsonOptions);
-            
+
             var result = await _producer.ProduceAsync(
                 topic,
-                new Message<string, string> 
-                { 
+                new Message<string, string>
+                {
                     Key = key.ToString(),
                     Value = json,
                     Headers = new Headers
@@ -56,7 +56,7 @@ public class KafkaProducerService : IDisposable
                     }
                 }
             );
-            
+
             _logger.LogInformation(
                 "Сообщение {MessageType} отправлено в топик {Topic}, Partition: {Partition}, Offset: {Offset}",
                 typeof(T).Name,

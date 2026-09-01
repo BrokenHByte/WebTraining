@@ -27,12 +27,12 @@ public static class KafkaConsumerExtensions
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = false
             };
-            
+
             configure?.Invoke(config);
-            
+
             var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
             var logger = sp.GetRequiredService<ILogger<KafkaConsumer<TMessage, TCommand>>>();
-            
+
             return new KafkaConsumer<TMessage, TCommand>(
                 config,
                 topic,
@@ -41,7 +41,7 @@ public static class KafkaConsumerExtensions
                 logger
             );
         });
-        
+
         return services;
     }
 }

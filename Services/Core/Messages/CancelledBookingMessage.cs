@@ -3,5 +3,5 @@
 [Serializable]
 public class CancelledBookingMessage
 {
-    public required string EventId { get; init; }  
+    public required string EventId { get; init; }
 }

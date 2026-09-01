@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Contracts.Kafka;
 
-public class KafkaConsumer<TMessage, TCommand> : BackgroundService 
+public class KafkaConsumer<TMessage, TCommand> : BackgroundService
     where TMessage : class
     where TCommand : IRequest
 {
@@ -17,7 +17,7 @@ public class KafkaConsumer<TMessage, TCommand> : BackgroundService
     private readonly string _topic;
     private readonly Func<TMessage, TCommand> _commandFactory;
     private readonly JsonSerializerOptions _jsonOptions;
-    
+
     public KafkaConsumer(
         ConsumerConfig config,
         string topic,
@@ -29,7 +29,7 @@ public class KafkaConsumer<TMessage, TCommand> : BackgroundService
         _commandFactory = commandFactory;
         _scopeFactory = scopeFactory;
         _logger = logger;
-        
+
         _consumer = new ConsumerBuilder<string, string>(config).Build();
         _consumer.Subscribe(topic);
         _jsonOptions = new JsonSerializerOptions
@@ -48,21 +48,21 @@ public class KafkaConsumer<TMessage, TCommand> : BackgroundService
                 try
                 {
                     var result = _consumer.Consume(stoppingToken);
-                    
+
                     if (result.IsPartitionEOF)
                         continue;
-                    
+
                     var message = JsonSerializer.Deserialize<TMessage>(result.Message.Value, _jsonOptions);
-                    
+
                     if (message != null)
                     {
                         using var scope = _scopeFactory.CreateScope();
                         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                        
+
                         // Создаем команду через фабрику
                         var command = _commandFactory(message);
                         await mediator.Send(command, stoppingToken);
-                        
+
                         _consumer.Commit(result);
                     }
                 }

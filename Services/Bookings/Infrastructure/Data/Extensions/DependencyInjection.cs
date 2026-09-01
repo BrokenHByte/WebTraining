@@ -23,8 +23,8 @@ public static class DependencyInjection
             var server = configuration["Kafka:BootstrapServers"];
             var cliendId = "booking-service";
             return new KafkaProducerService(server, cliendId, logger);
-        });;
-        
+        }); ;
+
         return services;
     }
 

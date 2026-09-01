@@ -6,5 +6,5 @@ public sealed record CancelBookingCommand : IRequest
 {
     public Guid Id { get; init; }
     public required string UserId { get; init; }
-    public required string UserRole { get; init; }   
+    public required string UserRole { get; init; }
 }

@@ -28,7 +28,7 @@ public class CreateBookingHandler(KafkaProducerService kafkaProducerService, IBo
             EventId = result.EventId.ToString(),
             UserId = result.UserId.ToString()
         });
-        
+
         return new CreateBookingResponse { Id = result.Id, EventId = result.EventId, Status = result.Status };
     }
 }

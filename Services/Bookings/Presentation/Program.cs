@@ -23,18 +23,18 @@ builder.Services.AddMediatR(cfg =>
 });
 
 
-builder.Services.AddKafkaConsumer<ConfirmationBookingMessage, CompletingBookingCommand>(builder.Configuration, TopicNames.BookingConfirmation, "booking1",   
+builder.Services.AddKafkaConsumer<ConfirmationBookingMessage, CompletingBookingCommand>(builder.Configuration, TopicNames.BookingConfirmation, "booking1",
     message => new CompletingBookingCommand
     {
         BookingId = new Guid(message.BookingId)
     }
 );
 
-builder.Services.AddKafkaConsumer<RejectBookingMessage, RejectBookingCommand>(builder.Configuration, TopicNames.BookingReject, "booking2", 
+builder.Services.AddKafkaConsumer<RejectBookingMessage, RejectBookingCommand>(builder.Configuration, TopicNames.BookingReject, "booking2",
     message => new RejectBookingCommand
     {
         BookingId = new Guid(message.BookingId),
-        Error =  message.Error
+        Error = message.Error
     }
 );
 

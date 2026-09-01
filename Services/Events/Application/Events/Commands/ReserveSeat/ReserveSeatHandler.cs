@@ -12,7 +12,7 @@ namespace Events.Application.Events.Commands.ReserveSeat;
 
 public class ReserveSeatHandler(IEventRepository eventRepository, KafkaProducerService kafkaService, ILogger<CreateEventHandler> logger) : IRequestHandler<ReserveSeatCommand>
 {
-    
+
     public async Task Handle(ReserveSeatCommand request, CancellationToken cancellationToken)
     {
         var eventOne = await eventRepository.GetByIdAsync(new Guid(request.EventId));

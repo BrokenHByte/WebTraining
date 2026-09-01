@@ -27,7 +27,7 @@ builder.Services.AddSingleton<KafkaProducerService>(sp =>
     var server = builder.Configuration["Kafka:BootstrapServers"];
     var cliendId = "event-service";
     return new KafkaProducerService(server, cliendId, logger);
-});;
+});
 
 builder.Services.AddKafkaConsumer<CreateBookingMessage, ReserveSeatCommand>(builder.Configuration, TopicNames.BookingCreate, "event1", message =>
     new ReserveSeatCommand()
