@@ -36,7 +36,7 @@ public class UserService(AppDbContext db, IPasswordHasher passwordHasher, IToken
         var user = await db.Users.Where(x => x.Login == login).FirstOrDefaultAsync();
         if (user == null || !passwordHasher.VerifyPassword(password, user.HashPass))
             throw new InvalidCredentialsException("Invalid username or password");
-        return tokenService.GenerationToken(login, user.Role);
+        return tokenService.GenerationToken(user.Id.ToString(), login, user.Role);
     }
 
 }

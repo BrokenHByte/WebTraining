@@ -10,11 +10,11 @@ namespace Authorization.Infrastructure.Data.Services;
 
 public class TokenService(IConfiguration configuration) : ITokenService
 {
-    public string GenerationToken(string login, User.Roles role)
+    public string GenerationToken(string userId, string login, User.Roles role)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, login),
+            new(ClaimTypes.NameIdentifier, userId),
             new(ClaimTypes.Email, login),
             new(ClaimTypes.Name, login),
             new(ClaimTypes.Role, role.ToString()),

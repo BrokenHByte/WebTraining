@@ -1,8 +1,14 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Bookings.Application.Bookings.Commands.CompletingBooking;
 using Bookings.Application.Bookings.Commands.CreateBooking;
+using Bookings.Application.Bookings.Commands.RejectBooking;
 using Bookings.Application.Common.Config;
 using Bookings.Infrastructure.Data.Extensions;
+using Contracts.Common;
+using Contracts.Kafka;
+using Contracts.Messages;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -16,6 +22,25 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateBookingHandler).Assembly);
 });
 
+
+builder.Services.AddKafkaConsumer<ConfirmationBookingMessage, CompletingBookingCommand>(builder.Configuration, TopicNames.BookingConfirmation, "booking1",   
+    message => new CompletingBookingCommand
+    {
+        BookingId = new Guid(message.BookingId)
+    }
+);
+
+builder.Services.AddKafkaConsumer<RejectBookingMessage, RejectBookingCommand>(builder.Configuration, TopicNames.BookingReject, "booking2", 
+    message => new RejectBookingCommand
+    {
+        BookingId = new Guid(message.BookingId),
+        Error =  message.Error
+    }
+);
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+             ?? throw new InvalidOperationException("JWT key is not configured");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -28,7 +53,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+                Encoding.UTF8.GetBytes(jwtKey)
             )
         };
     });

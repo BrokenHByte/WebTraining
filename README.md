@@ -18,7 +18,7 @@
 - Юнит тесты проекта запускаются из папки проекта командой  
 **dotnet test Application.UnitTests**
 - Интеграционные тесты проекта запускаются из папки проекта командой  
-**dotnet test Infrastructure.IntegrationTests**  
+**dotnet test Infrastructure.IntegrationTests**  [.env.example](.env.example)
 Для запуска интеграционных тестов должен быть запущен сервис docker
 - Для поддержания актуального состояния базы данных используются миграции.  
 Новую миграцию можно создать и применить командами:  

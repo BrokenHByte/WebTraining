@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["Contracts/Contracts.csproj", "Contracts/"]
+COPY ["Core/Core.csproj", "Core/"]
 COPY ["Bookings/Domain/Bookings.Domain.csproj", "Bookings/Domain/"]
 COPY ["Bookings/Application/Bookings.Application.csproj", "Bookings/Application/"]
 COPY ["Bookings/Infrastructure/Bookings.Infrastructure.csproj", "Bookings/Infrastructure/"]
@@ -9,7 +9,7 @@ COPY ["Bookings/Presentation/Bookings.Presentation.csproj", "Bookings/Presentati
 
 RUN dotnet restore "Bookings/Presentation/Bookings.Presentation.csproj"
 
-COPY ["Contracts/", "Contracts/"]
+COPY ["Core/", "Core/"]
 COPY ["Bookings/Domain/", "Bookings/Domain/"]
 COPY ["Bookings/Application/", "Bookings/Application/"]
 COPY ["Bookings/Infrastructure/", "Bookings/Infrastructure/"]

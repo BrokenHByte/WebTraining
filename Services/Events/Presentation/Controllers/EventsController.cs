@@ -61,11 +61,14 @@ public class EventsController(
 
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteEventAsync([FromBody] DeleteEventCommand data)
+    public async Task<IActionResult> DeleteEventAsync(Guid id)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-        await mediator.Send(data);
+        await mediator.Send(new DeleteEventCommand()
+        {
+            Id = id
+        });
         return Ok();
     }
 }

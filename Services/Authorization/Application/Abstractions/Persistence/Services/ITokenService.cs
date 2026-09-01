@@ -4,5 +4,5 @@ namespace Authorization.Application.Abstractions.Persistence.Services;
 
 public interface ITokenService
 {
-    string GenerationToken(string login, User.Roles role);
+    string GenerationToken(string userId, string login, User.Roles role);
 }

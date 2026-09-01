@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["Contracts/Contracts.csproj", "Contracts/"]
+COPY ["Core/Core.csproj", "Core/"]
 COPY ["Authorization/Domain/Authorization.Domain.csproj", "Authorization/Domain/"]
 COPY ["Authorization/Application/Authorization.Application.csproj", "Authorization/Application/"]
 COPY ["Authorization/Infrastructure/Authorization.Infrastructure.csproj", "Authorization/Infrastructure/"]
@@ -9,7 +9,7 @@ COPY ["Authorization/Presentation/Authorization.Presentation.csproj", "Authoriza
 
 RUN dotnet restore "Authorization/Presentation/Authorization.Presentation.csproj"
 
-COPY ["Contracts/", "Contracts/"]
+COPY ["Core/", "Core/"]
 COPY ["Authorization/Domain/", "Authorization/Domain/"]
 COPY ["Authorization/Application/", "Authorization/Application/"]
 COPY ["Authorization/Infrastructure/", "Authorization/Infrastructure/"]

@@ -1,7 +1,13 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Contracts.Common;
+using Contracts.Kafka;
+using Contracts.Messages;
 using Events.Application.Events.Commands.CreateEvent;
+using Events.Application.Events.Commands.ReleaseSeatEvent;
+using Events.Application.Events.Commands.ReserveSeat;
 using Events.Infrastructure.Data.Extensions;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -15,6 +21,31 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateEventHandler).Assembly);
 });
 
+builder.Services.AddSingleton<KafkaProducerService>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<KafkaProducerService>>();
+    var server = builder.Configuration["Kafka:BootstrapServers"];
+    var cliendId = "event-service";
+    return new KafkaProducerService(server, cliendId, logger);
+});;
+
+builder.Services.AddKafkaConsumer<CreateBookingMessage, ReserveSeatCommand>(builder.Configuration, TopicNames.BookingCreate, "event1", message =>
+    new ReserveSeatCommand()
+    {
+        BookingId = message.BookingId,
+        UserId = message.UserId,
+        EventId = message.EventId
+    });
+
+builder.Services.AddKafkaConsumer<CancelledBookingMessage, ReleaseSeatEventCommand>(builder.Configuration, TopicNames.BookingCancelled, "event2", message =>
+    new ReleaseSeatEventCommand()
+    {
+        EventId = new Guid(message.EventId)
+    });
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+             ?? throw new InvalidOperationException("JWT key is not configured");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -27,7 +58,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+                Encoding.UTF8.GetBytes(jwtKey)
             )
         };
     });

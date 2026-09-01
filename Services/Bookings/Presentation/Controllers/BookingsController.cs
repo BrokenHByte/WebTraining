@@ -20,8 +20,9 @@ public class BookingsController(IMediator mediator) : ControllerBase
             return BadRequest(ModelState);
         CreateBookingResponse booking = await mediator.Send(new CreateBookingCommand()
         {
-            EventId = eventId,
-            UserLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException()
+            EventId = eventId.ToString(),
+            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException(),
+            UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? throw new InvalidOperationException(),
         });
         Response.Headers.Location = $"/bookings/{booking.Id}";
         return Accepted(booking);
@@ -36,7 +37,8 @@ public class BookingsController(IMediator mediator) : ControllerBase
         await mediator.Send(new CancelBookingCommand()
         {
             Id = id,
-            UserLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException()
+            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException(),
+            UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? throw new InvalidOperationException()
         });
         return Ok();
     }
@@ -48,7 +50,8 @@ public class BookingsController(IMediator mediator) : ControllerBase
         var booking = await mediator.Send(new GetBookingByIdQuery()
         {
             Id = id,
-            UserLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException()
+            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException(),
+            UserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? throw new InvalidOperationException()
         });
         return Ok(booking);
     }

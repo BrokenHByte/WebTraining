@@ -30,9 +30,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Events.Infrastructure", "Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Events.Presentation", "Services\Events\Presentation\Events.Presentation.csproj", "{A11DED73-4480-4690-BE7F-EE8A4D69A1EC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contracts", "Contracts", "{8B0212C3-BAEE-4A07-969B-E39A8F2282DA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{8B0212C3-BAEE-4A07-969B-E39A8F2282DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Services\Contracts\Contracts.csproj", "{4ED09213-FBCF-4AB6-B4D9-9B63DADC92EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Services\Core\Core.csproj", "{4ED09213-FBCF-4AB6-B4D9-9B63DADC92EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,49 @@
+﻿using Contracts.Kafka;
+using Contracts.Messages;
+using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Application.Events.Commands.CreateEvent;
+using Events.Application.Events.Common;
+using Events.Domain.Exceptions;
+using MediatR;
+using Microsoft.Extensions.Logging;
+
+namespace Events.Application.Events.Commands.ReserveSeat;
+
+
+public class ReserveSeatHandler(IEventRepository eventRepository, KafkaProducerService kafkaService, ILogger<CreateEventHandler> logger) : IRequestHandler<ReserveSeatCommand>
+{
+    
+    public async Task Handle(ReserveSeatCommand request, CancellationToken cancellationToken)
+    {
+        var eventOne = await eventRepository.GetByIdAsync(new Guid(request.EventId));
+        if (DateTime.UtcNow > eventOne.StartAt)
+        {
+            await kafkaService.SendAsync(TopicNames.BookingReject, new Guid(request.EventId),
+                new RejectBookingMessage()
+                {
+                    BookingId = request.BookingId,
+                    Error = "The event has already started",
+                    CodeError = "400"
+                });
+            return;
+        }
+
+        if (!eventOne.TryReserveSeats())
+        {
+            await kafkaService.SendAsync(TopicNames.BookingReject, new Guid(request.EventId),
+                new RejectBookingMessage()
+                {
+                    BookingId = request.BookingId,
+                    Error = "No available seats for this event",
+                    CodeError = "409"
+                });
+            return;
+        }
+        await eventRepository.UpdateAsync(eventOne.Id, eventOne);
+        await kafkaService.SendAsync(TopicNames.BookingConfirmation, new Guid(request.EventId),
+            new ConfirmationBookingMessage()
+            {
+                BookingId = request.BookingId
+            });
+    }
+}
