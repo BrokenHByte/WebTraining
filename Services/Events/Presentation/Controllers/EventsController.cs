@@ -1,0 +1,74 @@
+using Events.Application.Events.Commands.CreateEvent;
+using Events.Application.Events.Commands.DeleteEvent;
+using Events.Application.Events.Commands.UpdateEvent;
+using Events.Application.Events.Queries.GetEventById;
+using Events.Application.Events.Queries.GetEventsPage;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Presentation.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class EventsController(
+    IMediator mediator) : ControllerBase
+{
+
+    [HttpGet]
+    public async Task<ActionResult<GetEventByIdResponse>> GetAllAsync([FromQuery] string? title, [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] int? page, [FromQuery] int? pageSize)
+    {
+        var result = await mediator.Send(new GetEventPageQuery()
+        {
+            Title = title,
+            From = from,
+            To = to,
+            Page = page,
+            PageSize = pageSize
+        });
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<GetEventByIdResponse>> GetByIdAsync(Guid id)
+    {
+        var result = await mediator.Send(new GetEventByIdQuery() { Id = id });
+        return Ok(result);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var guid = await mediator.Send(data);
+        return Created();
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateEventAsync([FromBody] UpdateEventCommand data)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        await mediator.Send(data);
+        return Ok();
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteEventAsync(Guid id)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        await mediator.Send(new DeleteEventCommand()
+        {
+            Id = id
+        });
+        return Ok();
+    }
+}
