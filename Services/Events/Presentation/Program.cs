@@ -46,17 +46,6 @@ builder.Services.AddKafkaConsumer<CancelledBookingMessage, ReleaseSeatEventComma
         EventId = new Guid(message.EventId)
     });
 
-builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection("Redis"));
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var config = sp.GetRequiredService<IOptions<RedisConfig>>().Value;
-    var options = ConfigurationOptions.Parse(config.ConnectionString);
-    options.AbortOnConnectFail = false;
-    options.ConnectRetry = 5;
-    options.ConnectTimeout = 5000;
-    return ConnectionMultiplexer.Connect(options);
-});
-
 var jwtKey = builder.Configuration["Jwt:Key"]
              ?? throw new InvalidOperationException("JWT key is not configured");
 
