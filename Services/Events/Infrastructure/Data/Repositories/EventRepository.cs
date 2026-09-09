@@ -18,9 +18,9 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
         var eventOne = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
         if (eventOne != null)
         {
-            return eventOne; 
+            return eventOne;
         }
-        
+
         logger.LogError($"Event with id {id} not found");
         throw new EventNotFoundException("Event not found");
     }
@@ -64,7 +64,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
             await db.SaveChangesAsync();
             return;
         }
-        
+
         logger.LogError($"Event with id {id} not found");
         throw new EventNotFoundException("Event not found");
     }
@@ -81,7 +81,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
         db.Events.Remove(oneEvent);
         await db.SaveChangesAsync();
     }
-    
+
     public IQueryable<Event> Pagination(IQueryable<Event> events, int page, int pageSize)
     {
         if (page <= 0)
@@ -119,10 +119,10 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
                 (title == null || x.Title.ToLower().Contains(title.ToLower())))
             .Select(x => x);
     }
-    
+
     public async Task<List<Event>> GetTop10()
     {
         return await db.Events.OrderBy(p => (p.TotalSeats - p.AvailableSeats) / p.TotalSeats).Take(10).ToListAsync();
-    }  
+    }
 
 }

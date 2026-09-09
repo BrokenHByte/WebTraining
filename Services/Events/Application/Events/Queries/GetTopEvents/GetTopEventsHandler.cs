@@ -16,7 +16,7 @@ public class GetTopEventsHandler(IEventRepository eventRepository, ICacheService
         {
             return cacheValue;
         }
-        
+
         var top10 = await eventRepository.GetTop10();
         var events = top10.Select(o => new GetEventByIdResponse
         {

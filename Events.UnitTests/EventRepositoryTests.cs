@@ -40,9 +40,9 @@ public class EventRepositoryTests
         _cacheServiceMock
             .Setup(x => x.GetObjectJson<GetEventByIdResponse>(cacheKey))
             .ReturnsAsync(cachedResponse);
-        
+
         var result = await _handler.Handle(query, CancellationToken.None);
-        
+
         Assert.NotNull(result);
         Assert.Equal(cachedResponse.Id, result.Id);
         Assert.Equal(cachedResponse.Title, result.Title);
@@ -51,7 +51,7 @@ public class EventRepositoryTests
         Assert.Equal(cachedResponse.EndAt, result.EndAt);
         Assert.Equal(cachedResponse.AvailableSeats, result.AvailableSeats);
         Assert.Equal(cachedResponse.TotalSeats, result.TotalSeats);
-        
+
         _cacheServiceMock.Verify(x => x.GetObjectJson<GetEventByIdResponse>(cacheKey), Times.Once);
         _eventRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
         _cacheServiceMock.Verify(x => x.SetObjectJson(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
@@ -76,14 +76,14 @@ public class EventRepositoryTests
         var cacheKey = $"event:{eventId}";
         _cacheServiceMock
             .Setup(x => x.GetObjectJson<GetEventByIdResponse>(cacheKey))
-            .ReturnsAsync((GetEventByIdResponse)null);
+            .ReturnsAsync((GetEventByIdResponse)null!);
 
         _eventRepositoryMock
             .Setup(x => x.GetByIdAsync(eventId))
             .ReturnsAsync(eventEntity);
-        
+
         var result = await _handler.Handle(query, CancellationToken.None);
-        
+
         Assert.NotNull(result);
         Assert.Equal(eventEntity.Id, result.Id);
         Assert.Equal(eventEntity.Title, result.Title);
@@ -92,15 +92,15 @@ public class EventRepositoryTests
         Assert.Equal(eventEntity.EndAt, result.EndAt);
         Assert.Equal(eventEntity.AvailableSeats, result.AvailableSeats);
         Assert.Equal(eventEntity.TotalSeats, result.TotalSeats);
-        
+
         _cacheServiceMock.Verify(x => x.GetObjectJson<GetEventByIdResponse>(cacheKey), Times.Once);
         _eventRepositoryMock.Verify(x => x.GetByIdAsync(eventId), Times.Once);
-        
+
         _cacheServiceMock.Verify(
             x => x.SetObjectJson(
-                cacheKey, 
-                It.Is<GetEventByIdResponse>(r => 
-                    r.Id == eventEntity.Id && 
+                cacheKey,
+                It.Is<GetEventByIdResponse>(r =>
+                    r.Id == eventEntity.Id &&
                     r.Title == eventEntity.Title &&
                     r.Description == eventEntity.Description)),
             Times.Once);
@@ -125,17 +125,17 @@ public class EventRepositoryTests
         var cacheKey = $"event:{eventId}";
         _cacheServiceMock
             .Setup(x => x.GetObjectJson<GetEventByIdResponse>(cacheKey))
-            .ReturnsAsync((GetEventByIdResponse)null);
+            .ReturnsAsync((GetEventByIdResponse)null!);
 
         _eventRepositoryMock
             .Setup(x => x.GetByIdAsync(eventId))
             .ReturnsAsync(eventEntity);
-        
+
         var result = await _handler.Handle(query, CancellationToken.None);
-        
+
         Assert.NotNull(result);
         Assert.Equal(eventEntity.Id, result.Id);
-        
+
         _cacheServiceMock.Verify(x => x.GetObjectJson<GetEventByIdResponse>(cacheKey), Times.Once);
         _eventRepositoryMock.Verify(x => x.GetByIdAsync(eventId), Times.Once);
         _cacheServiceMock.Verify(x => x.SetObjectJson(cacheKey, It.IsAny<GetEventByIdResponse>()), Times.Once);
@@ -170,13 +170,13 @@ public class EventRepositoryTests
             AvailableSeats = 20,
             TotalSeats = 30
         };
-        
+
         _cacheServiceMock
             .Setup(x => x.GetObjectJson<GetEventByIdResponse>($"event:{eventId1}"))
-            .ReturnsAsync((GetEventByIdResponse)null);
+            .ReturnsAsync((GetEventByIdResponse)null!);
         _cacheServiceMock
             .Setup(x => x.GetObjectJson<GetEventByIdResponse>($"event:{eventId2}"))
-            .ReturnsAsync((GetEventByIdResponse)null);
+            .ReturnsAsync((GetEventByIdResponse)null!);
 
         _eventRepositoryMock
             .Setup(x => x.GetByIdAsync(eventId1))
@@ -184,13 +184,13 @@ public class EventRepositoryTests
         _eventRepositoryMock
             .Setup(x => x.GetByIdAsync(eventId2))
             .ReturnsAsync(event2);
-        
+
         var result1 = await _handler.Handle(query1, CancellationToken.None);
         var result2 = await _handler.Handle(query2, CancellationToken.None);
-        
+
         Assert.Equal(eventId1, result1.Id);
         Assert.Equal(eventId2, result2.Id);
-        
+
         _cacheServiceMock.Verify(x => x.GetObjectJson<GetEventByIdResponse>($"event:{eventId1}"), Times.Once);
         _cacheServiceMock.Verify(x => x.GetObjectJson<GetEventByIdResponse>($"event:{eventId2}"), Times.Once);
         _eventRepositoryMock.Verify(x => x.GetByIdAsync(eventId1), Times.Once);

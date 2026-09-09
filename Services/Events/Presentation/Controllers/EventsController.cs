@@ -38,14 +38,14 @@ public class EventsController(
         var result = await mediator.Send(new GetEventByIdQuery() { Id = id });
         return Ok(result);
     }
-    
+
     [HttpGet("top")]
     public async Task<ActionResult<GetEventByIdResponse>> GetTop10()
     {
         var result = await mediator.Send(new GetTopEventsQuery());
         return Ok(result);
     }
-    
+
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)

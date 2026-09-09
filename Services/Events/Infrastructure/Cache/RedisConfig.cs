@@ -3,5 +3,5 @@
 public class RedisConfig
 {
     public string ConnectionString { get; set; } = "";
-    public int DefaultTTLMinutes { get; set; } = 10;    
+    public int DefaultTTLMinutes { get; set; } = 10;
 }

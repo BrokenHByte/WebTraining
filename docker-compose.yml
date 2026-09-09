@@ -140,8 +140,8 @@ services:
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
-      - Redis__ConnectionString=redis:6379,defaultDatabase=0,connectTimeout=5000,ssl=false
-      - Redis__DefaultTTLMinutes=15
+      - Redis__ConnectionString=redis:6379,defaultDatabase=0,connectTimeout=1000,ssl=false
+      - Redis__DefaultTTLMinutes=10
     ports:
       - "5001:8080"
     networks:

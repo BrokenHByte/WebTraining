@@ -22,19 +22,19 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("EventsConnection")).UseSnakeCaseNamingConvention());
         services.AddScoped<IEventRepository, EventRepository>();
-        
+
         services.Configure<RedisConfig>(configuration.GetSection("Redis"));
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<RedisConfig>>().Value;
             var options = ConfigurationOptions.Parse(config.ConnectionString);
             options.AbortOnConnectFail = false;
-            options.ConnectRetry = 5;
-            options.ConnectTimeout = 5000;
+            options.ConnectRetry = 1;
+            options.ConnectTimeout = 100;
             return ConnectionMultiplexer.Connect(options);
         });
         services.AddSingleton<ICacheService, RedisCacheService>();
-        
+
         return services;
     }
 
