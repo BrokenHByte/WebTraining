@@ -3,6 +3,7 @@ using Events.Application.Events.Commands.DeleteEvent;
 using Events.Application.Events.Commands.UpdateEvent;
 using Events.Application.Events.Queries.GetEventById;
 using Events.Application.Events.Queries.GetEventsPage;
+using Events.Application.Events.Queries.GetTopEvents;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,14 @@ public class EventsController(
         var result = await mediator.Send(new GetEventByIdQuery() { Id = id });
         return Ok(result);
     }
-
+    
+    [HttpGet("top")]
+    public async Task<ActionResult<GetEventByIdResponse>> GetTop10()
+    {
+        var result = await mediator.Send(new GetTopEventsQuery());
+        return Ok(result);
+    }
+    
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateEventAsync([FromBody] CreateEventCommand data)

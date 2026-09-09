@@ -12,4 +12,5 @@ public interface IEventRepository
     Task<Guid> CreateAsync(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats);
     Task UpdateAsync(Guid id, Event data);
     Task DeleteByIdAsync(Guid id);
+    Task<List<Event>> GetTop10();
 }

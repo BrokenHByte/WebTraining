@@ -6,12 +6,15 @@ using Contracts.Messages;
 using Events.Application.Events.Commands.CreateEvent;
 using Events.Application.Events.Commands.ReleaseSeatEvent;
 using Events.Application.Events.Commands.ReserveSeat;
+using Events.Infrastructure.Cache;
 using Events.Infrastructure.Data.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Presentation.Middleware;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +45,17 @@ builder.Services.AddKafkaConsumer<CancelledBookingMessage, ReleaseSeatEventComma
     {
         EventId = new Guid(message.EventId)
     });
+
+builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection("Redis"));
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = sp.GetRequiredService<IOptions<RedisConfig>>().Value;
+    var options = ConfigurationOptions.Parse(config.ConnectionString);
+    options.AbortOnConnectFail = false;
+    options.ConnectRetry = 5;
+    options.ConnectTimeout = 5000;
+    return ConnectionMultiplexer.Connect(options);
+});
 
 var jwtKey = builder.Configuration["Jwt:Key"]
              ?? throw new InvalidOperationException("JWT key is not configured");
