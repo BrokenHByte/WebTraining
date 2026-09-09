@@ -1,4 +1,5 @@
-﻿using Events.Application.Abstractions.Persistence.Repositories;
+﻿using Contracts.Cache;
+using Events.Application.Abstractions.Persistence.Repositories;
 using Events.Application.Abstractions.Persistence.Services;
 using Events.Application.Events.Commands.DeleteEvent;
 using MediatR;
@@ -12,6 +13,6 @@ public class ReleaseSeatEventHandler(IEventRepository eventRepository, ICacheSer
         var oneEvent = await eventRepository.GetByIdAsync(request.EventId);
         oneEvent.ReleaseSeats();
         await eventRepository.UpdateAsync(oneEvent.Id, oneEvent);
-        await cacheService.DeleteObjectJson($"event:{oneEvent.Id}");
+        await cacheService.DeleteObjectJson(CacheKeys.KeyGetEventById + oneEvent.Id.ToString());
     }
 }

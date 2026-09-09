@@ -12,7 +12,7 @@ public class RedisCacheService(IConnectionMultiplexer redis, IOptions<RedisConfi
     private readonly IDatabase _cacheDb = redis.GetDatabase();
     private readonly int _defaultTTL = config.Value.DefaultTTLMinutes;
 
-    public async Task SetObjectJson<T>(string key, T objectJson)
+    public async Task SetObjectJson<T>(string key, T objectJson, int? ttl = null)
     {
         if (!redis.IsConnected)
         {
@@ -21,7 +21,7 @@ public class RedisCacheService(IConnectionMultiplexer redis, IOptions<RedisConfi
         }
 
         var json = JsonSerializer.Serialize(objectJson);
-        await _cacheDb.StringSetAsync(key, json, TimeSpan.FromMinutes(_defaultTTL));
+        await _cacheDb.StringSetAsync(key, json, TimeSpan.FromMinutes(ttl ?? _defaultTTL));
     }
 
     public async Task<T?> GetObjectJson<T>(string key)

@@ -122,7 +122,7 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
 
     public async Task<List<Event>> GetTop10()
     {
-        return await db.Events.OrderBy(p => (p.TotalSeats - p.AvailableSeats) / p.TotalSeats).Take(10).ToListAsync();
+        return await db.Events.OrderByDescending(p => 1.0 * (p.TotalSeats - p.AvailableSeats) / p.TotalSeats).Take(10).ToListAsync();
     }
 
 }

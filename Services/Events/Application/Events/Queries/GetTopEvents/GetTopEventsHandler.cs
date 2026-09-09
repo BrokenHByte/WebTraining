@@ -1,9 +1,8 @@
-﻿using Events.Application.Abstractions.Persistence.Repositories;
+﻿using Contracts.Cache;
+using Events.Application.Abstractions.Persistence.Repositories;
 using Events.Application.Abstractions.Persistence.Services;
 using Events.Application.Events.Queries.GetEventById;
-using Events.Application.Events.Queries.GetEventsPage;
 using MediatR;
-using StackExchange.Redis;
 
 namespace Events.Application.Events.Queries.GetTopEvents;
 
@@ -11,7 +10,7 @@ public class GetTopEventsHandler(IEventRepository eventRepository, ICacheService
 {
     public async Task<GetTopEventsResponse> Handle(GetTopEventsQuery request, CancellationToken cancellationToken)
     {
-        var cacheValue = await cacheService.GetObjectJson<GetTopEventsResponse>("events:top10");
+        var cacheValue = await cacheService.GetObjectJson<GetTopEventsResponse>(CacheKeys.KeyGetTopEvents.Key);
         if (cacheValue != null)
         {
             return cacheValue;
@@ -33,7 +32,7 @@ public class GetTopEventsHandler(IEventRepository eventRepository, ICacheService
         {
             Events = events
         };
-        await cacheService.SetObjectJson("events:top10", top10Events);
+        await cacheService.SetObjectJson(CacheKeys.KeyGetTopEvents.Key, top10Events, CacheKeys.KeyGetTopEvents.Ttl);
         return top10Events;
     }
 }

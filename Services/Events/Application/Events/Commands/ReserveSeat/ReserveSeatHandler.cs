@@ -1,4 +1,5 @@
-﻿using Contracts.Kafka;
+﻿using Contracts.Cache;
+using Contracts.Kafka;
 using Contracts.Messages;
 using Events.Application.Abstractions.Persistence.Repositories;
 using Events.Application.Abstractions.Persistence.Services;
@@ -41,7 +42,7 @@ public class ReserveSeatHandler(IEventRepository eventRepository, KafkaProducerS
             return;
         }
         await eventRepository.UpdateAsync(eventOne.Id, eventOne);
-        await cacheService.DeleteObjectJson($"event:{eventOne.Id}");
+        await cacheService.DeleteObjectJson( CacheKeys.KeyGetEventById + eventOne.Id.ToString());
         await kafkaService.SendAsync(TopicNames.BookingConfirmation, new Guid(request.EventId),
             new ConfirmationBookingMessage()
             {

@@ -1,10 +1,7 @@
-﻿using System.Text.Json;
+﻿using Contracts.Cache;
 using Events.Application.Abstractions.Persistence.Repositories;
 using Events.Application.Abstractions.Persistence.Services;
-using Events.Domain.Entities;
 using MediatR;
-using Microsoft.Extensions.Options;
-using StackExchange.Redis;
 
 namespace Events.Application.Events.Queries.GetEventById;
 
@@ -12,7 +9,7 @@ public class GetEventByIdHandler(IEventRepository eventRepository, ICacheService
 {
     public async Task<GetEventByIdResponse> Handle(GetEventByIdQuery request, CancellationToken cancellationToken)
     {
-        var cacheValue = await cacheService.GetObjectJson<GetEventByIdResponse>($"event:{request.Id}");
+        var cacheValue = await cacheService.GetObjectJson<GetEventByIdResponse>(CacheKeys.KeyGetEventById.Key + request.Id);
         if (cacheValue != null)
         {
             return cacheValue;
@@ -29,7 +26,7 @@ public class GetEventByIdHandler(IEventRepository eventRepository, ICacheService
             AvailableSeats = result.AvailableSeats,
             TotalSeats = result.TotalSeats
         };
-        await cacheService.SetObjectJson($"event:{request.Id}", obj);
+        await cacheService.SetObjectJson(CacheKeys.KeyGetEventById.Key + request.Id, obj, CacheKeys.KeyGetEventById.Ttl);
         return obj;
     }
 }
