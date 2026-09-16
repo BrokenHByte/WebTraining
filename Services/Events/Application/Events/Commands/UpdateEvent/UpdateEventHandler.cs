@@ -1,11 +1,13 @@
-﻿using Events.Application.Abstractions.Persistence.Repositories;
+﻿using Contracts.Cache;
+using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Application.Abstractions.Persistence.Services;
 using Events.Application.Events.Common;
 using Events.Domain.Entities;
 using MediatR;
 
 namespace Events.Application.Events.Commands.UpdateEvent;
 
-public class UpdateEventHandler(IEventRepository eventRepository) : IRequestHandler<UpdateEventCommand>
+public class UpdateEventHandler(IEventRepository eventRepository, ICacheService cacheService) : IRequestHandler<UpdateEventCommand>
 {
     public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
@@ -18,5 +20,6 @@ public class UpdateEventHandler(IEventRepository eventRepository) : IRequestHand
             StartAt = request.StartAt,
             EndAt = request.EndAt
         });
+        await cacheService.DeleteObjectJson(CacheKeys.KeyGetEventById.Key + request.ExistingId);
     }
 }

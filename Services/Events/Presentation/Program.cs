@@ -6,12 +6,15 @@ using Contracts.Messages;
 using Events.Application.Events.Commands.CreateEvent;
 using Events.Application.Events.Commands.ReleaseSeatEvent;
 using Events.Application.Events.Commands.ReserveSeat;
+using Events.Infrastructure.Cache;
 using Events.Infrastructure.Data.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Presentation.Middleware;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,8 +1,12 @@
-﻿using Events.Application.Abstractions.Persistence.Repositories;
+﻿using System.Text.Json;
+using Events.Application.Abstractions.Persistence.Repositories;
 using Events.Domain.Entities;
 using Events.Domain.Exceptions;
+using Events.Infrastructure.Cache;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace Events.Infrastructure.Data.Repositories;
 
@@ -13,7 +17,9 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
     {
         var eventOne = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
         if (eventOne != null)
+        {
             return eventOne;
+        }
 
         logger.LogError($"Event with id {id} not found");
         throw new EventNotFoundException("Event not found");
@@ -66,7 +72,6 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
     public async Task DeleteByIdAsync(Guid id)
     {
         var oneEvent = await db.Events.Where(x => x.Id == id).FirstOrDefaultAsync();
-
         if (oneEvent == null)
         {
             logger.LogError($"Event with id {id} not found");
@@ -113,6 +118,11 @@ public class EventRepository(ILogger<EventRepository> logger, AppDbContext db) :
                 (to == null || x.EndAt <= to) &&
                 (title == null || x.Title.ToLower().Contains(title.ToLower())))
             .Select(x => x);
+    }
+
+    public async Task<List<Event>> GetTop10()
+    {
+        return await db.Events.OrderByDescending(p => 1.0 * (p.TotalSeats - p.AvailableSeats) / p.TotalSeats).Take(10).ToListAsync();
     }
 
 }

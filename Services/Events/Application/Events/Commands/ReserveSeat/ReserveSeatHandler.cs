@@ -1,6 +1,8 @@
-﻿using Contracts.Kafka;
+﻿using Contracts.Cache;
+using Contracts.Kafka;
 using Contracts.Messages;
 using Events.Application.Abstractions.Persistence.Repositories;
+using Events.Application.Abstractions.Persistence.Services;
 using Events.Application.Events.Commands.CreateEvent;
 using Events.Application.Events.Common;
 using Events.Domain.Exceptions;
@@ -10,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace Events.Application.Events.Commands.ReserveSeat;
 
 
-public class ReserveSeatHandler(IEventRepository eventRepository, KafkaProducerService kafkaService, ILogger<CreateEventHandler> logger) : IRequestHandler<ReserveSeatCommand>
+public class ReserveSeatHandler(IEventRepository eventRepository, KafkaProducerService kafkaService, ILogger<CreateEventHandler> logger, ICacheService cacheService) : IRequestHandler<ReserveSeatCommand>
 {
 
     public async Task Handle(ReserveSeatCommand request, CancellationToken cancellationToken)
@@ -40,6 +42,7 @@ public class ReserveSeatHandler(IEventRepository eventRepository, KafkaProducerS
             return;
         }
         await eventRepository.UpdateAsync(eventOne.Id, eventOne);
+        await cacheService.DeleteObjectJson( CacheKeys.KeyGetEventById + eventOne.Id.ToString());
         await kafkaService.SendAsync(TopicNames.BookingConfirmation, new Guid(request.EventId),
             new ConfirmationBookingMessage()
             {

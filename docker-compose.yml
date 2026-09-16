@@ -129,6 +129,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      redis:
+        condition: service_healthy        
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
@@ -138,6 +140,8 @@ services:
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
+      - Redis__ConnectionString=redis:6379,defaultDatabase=0,connectTimeout=1000,ssl=false
+      - Redis__DefaultTTLMinutes=10
     ports:
       - "5001:8080"
     networks:
@@ -197,7 +201,17 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-
+    
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "6379:6379"
 volumes:
   kafka_data:
   event_service_pgdata:
