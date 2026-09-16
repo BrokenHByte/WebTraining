@@ -142,6 +142,7 @@ services:
       - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
       - Redis__ConnectionString=redis:6379,defaultDatabase=0,connectTimeout=1000,ssl=false
       - Redis__DefaultTTLMinutes=10
+      - Otlp__Endpoint=http://jaeger:4317
     ports:
       - "5001:8080"
     networks:
@@ -169,6 +170,7 @@ services:
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
+      - Otlp__Endpoint=http://jaeger:4317
     ports:
       - "5002:8080"
     networks:
@@ -196,6 +198,7 @@ services:
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES}
+      - Otlp__Endpoint=http://jaeger:4317
     ports:
       - "5003:8080"
     networks:
@@ -212,12 +215,49 @@ services:
       retries: 10
     ports:
       - "6379:6379"
+    networks:
+      - app-network
+      
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: eventapi-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: eventapi-jaeger
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - app-network
+      
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: eventapi-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - app-network
+      
 volumes:
   kafka_data:
   event_service_pgdata:
   booking_service_pgdata:
-  authorization_service_pgdata: 
-
+  authorization_service_pgdata:
+  grafana-data:
+    
 networks:
   app-network:
     driver: bridge
