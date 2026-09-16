@@ -44,6 +44,21 @@
 ttl для /events/{id} = 10 минут  
 ttl для /events/top = 15 минут  
 
+# Инструменты мониторинга
+1. Prometheus - сбор метрик    
+Можно проверить что метрики доступны по адресу /metrics, для любого сервиса  
+Сам сервис расположен на порту 9090. Можно убедится в правильном подключении к сервисам по пути :9090/targets  
+2. Jaeger - отслеживание трейсов  
+UI сервиса доступно на порту 16686  
+3. Grafana - визуализация данных мониторинга  
+UI сервиса доступно на порту 3000  
+Можно использовать файл metrics.json для создания дашборда с метриками:    
+http_server_request_duration_seconds  
+http_server_active_requests  
+http_server_request_duration_seconds_count  
+dotnet_thread_pool_queue_length_total  
+dotnet_gc_collections_total  
+
 # Аутентификация и авторизация  
 1. Используя Swagger (http://localhost:5003/auth/register) создайте пользователя с правами "Admin" или "User"  
    (пользователи без прав администратора не могут управлять событиями и удалять чужие бронирования)
